@@ -55,6 +55,7 @@ def MUX16(xs: Tuple[bool], ys: Tuple[bool], sel: bool) -> Tuple[bool]:
     assert len(xs) == 16 and len(ys) == 16
     return tuple(MUX(x, y, sel) for x, y in zip(xs, ys))
 
+
 # multi-way variants
 def OR8WAY(xs: Tuple[bool]) -> bool:
     """8-way Or."""
