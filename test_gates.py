@@ -56,7 +56,11 @@ def test_and16():
     assert gates.AND16((True, True, True, True, False, True, True, True, True, True, True, True, True, False, False, False), (True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True)) == (True, True, True, True, False, True, True, True, True, True, True, True, True, False, False, False)
 
 def test_or16():
-    raise NotImplementedError()
+    assert gates.OR16((False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False), (False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False)) == (False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False)
+    assert gates.OR16((True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True), (True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True)) == (True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True)
+    assert gates.OR16((True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False), (True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True)) == (True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True)
+    assert gates.OR16((False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False), (False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False)) == (False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False)
+    assert gates.OR16((True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False), (True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False)) == (True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False)
 
 def test_mux16():
     raise NotImplementedError()
