@@ -56,4 +56,23 @@ def MUX16(xs: Tuple[bool], ys: Tuple[bool], sel: bool) -> Tuple[bool]:
     return tuple(MUX(x, y, sel) for x, y in zip(xs, ys))
 
 # multi-way variants
-# TODO: Add stubs
+def OR8WAY(xs: Tuple[bool]) -> bool:
+    """8-way Or."""
+    assert len(xs) == 8
+    return (xs[0] or (xs[1] or (xs[2] or (xs[3] or (xs[4] or (xs[5] or (xs[6] or xs[7])))))))
+
+def MUX4WAY16(xs: Tuple[bool], ys: Tuple[bool], zs: Tuple[bool], ws: Tuple[bool], sel: Tuple[bool]) -> Tuple[bool]:
+    """Selects between four 16-bit inputs."""
+    raise NotImplementedError()
+
+def MUX8WAY16(xs: Tuple[bool], ys: Tuple[bool], zs: Tuple[bool], ws: Tuple[bool], us: Tuple[bool], vs: Tuple[bool], ms: Tuple[bool], ns: Tuple[bool], sel: Tuple[bool]) -> Tuple[bool]:
+    """Selects between eight 16-bit inputs."""
+    raise NotImplementedError()
+
+def DMUX4WAY(xs: Tuple[bool], sel: Tuple[bool]) -> Tuple[Tuple[bool], Tuple[bool], Tuple[bool], Tuple[bool]]:
+    """De-multiplexes a single input into four outputs."""
+    raise NotImplementedError()
+
+def DMUX8WAY(xs: Tuple[bool], sel: Tuple[bool]) -> Tuple[Tuple[bool], Tuple[bool], Tuple[bool], Tuple[bool], Tuple[bool], Tuple[bool], Tuple[bool], Tuple[bool]]:
+    """De-multiplexes a single input into eight outputs."""
+    raise NotImplementedError()
