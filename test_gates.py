@@ -2,9 +2,10 @@ import gates
 import random
 
 
-def _sample_16bit() -> tuple:
-    """Returns a random 16-bit tuple of bools."""
-    return tuple(random.choice([True, False]) for _ in range(16))
+def _sample_bits(n: int) -> tuple:
+    """Returns a random `n`-bit tuple of bools."""
+    assert n >= 0 and isinstance(n, int)
+    return tuple(random.choice([True, False]) for _ in range(n))
 
 
 # elementary logic gates
@@ -51,39 +52,41 @@ def test_dmux():
 # 16-bit variants
 def test_not16():
     for _ in range(100):
-        xs = _sample_16bit()
+        xs = _sample_bits(16)
         for x, not_x in zip(xs, gates.NOT16(xs)):
             assert not_x == (not x)
 
 def test_and16():
     for _ in range(100):
-        xs = _sample_16bit()
-        ys = _sample_16bit()
+        xs = _sample_bits(16)
+        ys = _sample_bits(16)
         for x, y, x_and_y in zip(xs, ys, gates.AND16(xs, ys)):
             assert x_and_y == (x and y)
 
 def test_or16():
     for _ in range(100):
-        xs = _sample_16bit()
-        ys = _sample_16bit()
+        xs = _sample_bits(16)
+        ys = _sample_bits(16)
         for x, y, x_or_y in zip(xs, ys, gates.OR16(xs, ys)):
             assert x_or_y == (x or y)
 
 def test_mux16():
     for _ in range(100):
-        xs = _sample_16bit()
-        ys = _sample_16bit()
+        xs = _sample_bits(16)
+        ys = _sample_bits(16)
         
         for x, y, x_or_y in zip(xs, ys, gates.MUX16(xs, ys, sel=False)):
             assert x_or_y == x
-        
+
         for x, y, x_or_y in zip(xs, ys, gates.MUX16(xs, ys, sel=True)):
             assert x_or_y == y
 
 
 # multi-way variants
 def test_or8way():
-    raise NotImplementedError()
+    for _ in range(100):
+        xs = _sample_bits(8)
+        assert gates.OR8WAY(xs) == any(xs)
 
 def test_mux4way16():
     raise NotImplementedError()
