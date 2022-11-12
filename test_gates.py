@@ -1,4 +1,10 @@
 import gates
+import random
+
+
+def _sample_16bit() -> tuple:
+    """Returns a random 16-bit tuple of bools."""
+    return tuple(random.choice([True, False]) for _ in range(16))
 
 
 # elementary logic gates
@@ -44,26 +50,36 @@ def test_dmux():
 
 # 16-bit variants
 def test_not16():
-    assert gates.NOT16((False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False)) == (True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True)
-    assert gates.NOT16((True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True)) == (False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False)
-    assert gates.NOT16((True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True)) == (False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False)
-    assert gates.NOT16((True, True, True, True, False, True, True, True, True, True, True, True, True, False, False, False)) == (False, False, False, False, True, False, False, False, False, False, False, False, False, True, True, True)
+    for _ in range(100):
+        xs = _sample_16bit()
+        for x, not_x in zip(xs, gates.NOT16(xs)):
+            assert not_x == (not x)
 
 def test_and16():
-    assert gates.AND16((False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False), (False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False)) == (False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False)
-    assert gates.AND16((True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True), (True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True)) == (True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True)
-    assert gates.AND16((True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True), (True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True)) == (True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True)
-    assert gates.AND16((True, True, True, True, False, True, True, True, True, True, True, True, True, False, False, False), (True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True)) == (True, True, True, True, False, True, True, True, True, True, True, True, True, False, False, False)
+    for _ in range(100):
+        xs = _sample_16bit()
+        ys = _sample_16bit()
+        for x, y, x_and_y in zip(xs, ys, gates.AND16(xs, ys)):
+            assert x_and_y == (x and y)
 
 def test_or16():
-    assert gates.OR16((False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False), (False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False)) == (False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False)
-    assert gates.OR16((True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True), (True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True)) == (True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True)
-    assert gates.OR16((True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False), (True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True)) == (True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True)
-    assert gates.OR16((False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False), (False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False)) == (False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False)
-    assert gates.OR16((True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False), (True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False)) == (True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False)
+    for _ in range(100):
+        xs = _sample_16bit()
+        ys = _sample_16bit()
+        for x, y, x_or_y in zip(xs, ys, gates.OR16(xs, ys)):
+            assert x_or_y == (x or y)
 
 def test_mux16():
-    raise NotImplementedError()
+    for _ in range(100):
+        xs = _sample_16bit()
+        ys = _sample_16bit()
+        
+        for x, y, x_or_y in zip(xs, ys, gates.MUX16(xs, ys, sel=False)):
+            assert x_or_y == x
+        
+        for x, y, x_or_y in zip(xs, ys, gates.MUX16(xs, ys, sel=True)):
+            assert x_or_y == y
+
 
 # multi-way variants
 def test_or8way():
