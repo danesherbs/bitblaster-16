@@ -1,5 +1,6 @@
 import gates
 
+
 # elementary logic gates
 def test_and():
     assert gates.AND(0, 0) == 0
@@ -30,17 +31,29 @@ def test_xor():
     assert gates.XOR(1, 1) == 0
 
 def test_mux():
-    raise NotImplementedError()
+    for x in [True, False]:
+        for y in [True, False]:
+                assert gates.MUX(x, y, sel=True) == y
+                assert gates.MUX(x, y, sel=False) == x
 
 def test_dmux():
-    raise NotImplementedError()
+    for x in [True, False]:
+        assert gates.DMUX(x, sel=False) == (x, False)
+        assert gates.DMUX(x, sel=True) == (False, x)
+
 
 # 16-bit variants
 def test_not16():
-    raise NotImplementedError()
+    assert gates.NOT16((False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False)) == (True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True)
+    assert gates.NOT16((True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True)) == (False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False)
+    assert gates.NOT16((True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True)) == (False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False)
+    assert gates.NOT16((True, True, True, True, False, True, True, True, True, True, True, True, True, False, False, False)) == (False, False, False, False, True, False, False, False, False, False, False, False, False, True, True, True)
 
 def test_and16():
-    raise NotImplementedError()
+    assert gates.AND16((False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False), (False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False)) == (False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False)
+    assert gates.AND16((True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True), (True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True)) == (True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True)
+    assert gates.AND16((True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True), (True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True)) == (True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True)
+    assert gates.AND16((True, True, True, True, False, True, True, True, True, True, True, True, True, False, False, False), (True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True)) == (True, True, True, True, False, True, True, True, True, True, True, True, True, False, False, False)
 
 def test_or16():
     raise NotImplementedError()
