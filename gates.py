@@ -36,6 +36,9 @@ def AND16(xs: Tuple[bool], ys: Tuple[bool]) -> Tuple[bool]:
     assert len(xs) == 16 and len(ys) == 16
     return tuple(x and y for x, y in zip(xs, ys))
 
+def OR16(xs: Tuple[bool], ys: Tuple[bool]) -> Tuple[bool]:
+    assert len(xs) == 16 and len(ys) == 16
+    return tuple(x or y for x, y in zip(xs, ys))
 
 # multi-way variants
 # TODO: Add stubs
