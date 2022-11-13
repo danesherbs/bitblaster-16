@@ -2,7 +2,7 @@ import gates
 import random
 
 
-NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST = 1_000
+NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST = 10_000
 
 
 def _sample_bits(n: int) -> tuple:
@@ -147,12 +147,19 @@ def test_dmux4way():
 
 
 def test_dmux8way():
-    for x in [True, False]:
-        assert gates.DMUX8WAY(x, sel=(False, False, False)) == _make_one_hot(n=8, i=0)
-        assert gates.DMUX8WAY(x, sel=(False, False, True)) == _make_one_hot(n=8, i=1)
-        assert gates.DMUX8WAY(x, sel=(False, True, False)) == _make_one_hot(n=8, i=2)
-        assert gates.DMUX8WAY(x, sel=(False, True, True)) == _make_one_hot(n=8, i=3)
-        assert gates.DMUX8WAY(x, sel=(True, False, False)) == _make_one_hot(n=8, i=4)
-        assert gates.DMUX8WAY(x, sel=(True, False, True)) == _make_one_hot(n=8, i=5)
-        assert gates.DMUX8WAY(x, sel=(True, True, False)) == _make_one_hot(n=8, i=6)
-        assert gates.DMUX8WAY(x, sel=(True, True, True)) == _make_one_hot(n=8, i=7)
+    assert gates.DMUX8WAY(True, sel=(False, False, False)) == _make_one_hot(n=8, i=0)
+    assert gates.DMUX8WAY(True, sel=(False, False, True)) == _make_one_hot(n=8, i=1)
+    assert gates.DMUX8WAY(True, sel=(False, True, False)) == _make_one_hot(n=8, i=2)
+    assert gates.DMUX8WAY(True, sel=(False, True, True)) == _make_one_hot(n=8, i=3)
+    assert gates.DMUX8WAY(True, sel=(True, False, False)) == _make_one_hot(n=8, i=4)
+    assert gates.DMUX8WAY(True, sel=(True, False, True)) == _make_one_hot(n=8, i=5)
+    assert gates.DMUX8WAY(True, sel=(True, True, False)) == _make_one_hot(n=8, i=6)
+    assert gates.DMUX8WAY(True, sel=(True, True, True)) == _make_one_hot(n=8, i=7)
+    assert gates.DMUX8WAY(False, sel=(False, False, False)) == (False,) * 8
+    assert gates.DMUX8WAY(False, sel=(False, False, True)) == (False,) * 8
+    assert gates.DMUX8WAY(False, sel=(False, True, False)) == (False,) * 8
+    assert gates.DMUX8WAY(False, sel=(False, True, True)) == (False,) * 8
+    assert gates.DMUX8WAY(False, sel=(True, False, False)) == (False,) * 8
+    assert gates.DMUX8WAY(False, sel=(True, False, True)) == (False,) * 8
+    assert gates.DMUX8WAY(False, sel=(True, True, False)) == (False,) * 8
+    assert gates.DMUX8WAY(False, sel=(True, True, True)) == (False,) * 8
