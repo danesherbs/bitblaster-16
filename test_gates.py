@@ -2,7 +2,7 @@ import gates
 import random
 
 
-NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST = 10_000
+NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST = 1_000
 
 
 def _sample_bits(n: int) -> tuple:
