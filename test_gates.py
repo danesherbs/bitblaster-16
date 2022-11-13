@@ -67,8 +67,8 @@ def test_xor():
 def test_mux():
     for x in [True, False]:
         for y in [True, False]:
-            assert gates.MUX(x, y, sel=True) == y
             assert gates.MUX(x, y, sel=False) == x
+            assert gates.MUX(x, y, sel=True) == y
 
 
 def test_dmux():
@@ -105,12 +105,8 @@ def test_mux16():
     for _ in range(NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST):
         xs = _sample_bits(16)
         ys = _sample_bits(16)
-
-        for x, y, out in zip(xs, ys, gates.MUX16(xs, ys, sel=False)):
-            assert out == x
-
-        for x, y, out in zip(xs, ys, gates.MUX16(xs, ys, sel=True)):
-            assert out == y
+        assert gates.MUX16(xs, ys, sel=False) == xs
+        assert gates.MUX16(xs, ys, sel=True) == ys
 
 
 # multi-way variants
