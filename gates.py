@@ -97,7 +97,7 @@ def MUX(x: bool, y: bool, sel: bool) -> bool:
 
 
 def DMUX(x: bool, sel: bool) -> Tuple[bool, bool]:
-    """De-multiplexes a single input into two outputs."""
+    """Channels the input to one out of two outputs."""
     # pre-conditions
     assert isinstance(x, bool), "`x` must be of type `bool`"
     assert isinstance(sel, bool), "`sel` must be of type `bool`"
@@ -333,10 +333,35 @@ def MUX8WAY16(
 
 
 def DMUX4WAY(
-    xs: Tuple[bool], sel: Tuple[bool]
+    x: bool, sel: Tuple[bool]
 ) -> Tuple[Tuple[bool], Tuple[bool], Tuple[bool], Tuple[bool]]:
-    """De-multiplexes a single input into four outputs."""
-    raise NotImplementedError()
+    """Channels the input to one out of four outputs."""
+    # pre-conditions
+    assert isinstance(x, bool), "`x` must be of type `bool`"
+    assert (
+        isinstance(sel, tuple)
+        and len(sel) == 2
+        and all(isinstance(s, bool) for s in sel)
+    ), "`sel` must be a 2-tuple of `bool`s"
+
+    # implementation
+    x1, x2 = DMUX(x, sel[1])
+    x3, x4 = DMUX(x, sel[1])
+    out = (
+        ((not sel[0]) and (not sel[1])) and x1,
+        ((not sel[0]) and sel[1]) and x2,
+        (sel[0] and (not sel[1])) and x3,
+        (sel[0] and sel[1]) and x4,
+    )
+
+    # post-conditions
+    assert (
+        isinstance(out, tuple)
+        and len(out) == 4
+        and all(isinstance(x, bool) for x in out)
+    ), "Output must be a 4-tuple of `bool`s"
+
+    return out
 
 
 def DMUX8WAY(
