@@ -2,7 +2,7 @@ import gates
 import random
 
 
-NUMBER_OF_SAMPLES_PER_TEST = 1_000
+NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST = 1_000
 
 
 def _sample_bits(n: int) -> tuple:
@@ -66,14 +66,14 @@ def test_dmux():
 
 # 16-bit variants
 def test_not16():
-    for _ in range(NUMBER_OF_SAMPLES_PER_TEST):
+    for _ in range(NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST):
         xs = _sample_bits(16)
         for x, not_x in zip(xs, gates.NOT16(xs)):
             assert not_x == (not x)
 
 
 def test_and16():
-    for _ in range(NUMBER_OF_SAMPLES_PER_TEST):
+    for _ in range(NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST):
         xs = _sample_bits(16)
         ys = _sample_bits(16)
         for x, y, x_and_y in zip(xs, ys, gates.AND16(xs, ys)):
@@ -81,7 +81,7 @@ def test_and16():
 
 
 def test_or16():
-    for _ in range(NUMBER_OF_SAMPLES_PER_TEST):
+    for _ in range(NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST):
         xs = _sample_bits(16)
         ys = _sample_bits(16)
         for x, y, x_or_y in zip(xs, ys, gates.OR16(xs, ys)):
@@ -89,7 +89,7 @@ def test_or16():
 
 
 def test_mux16():
-    for _ in range(NUMBER_OF_SAMPLES_PER_TEST):
+    for _ in range(NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST):
         xs = _sample_bits(16)
         ys = _sample_bits(16)
 
@@ -102,13 +102,13 @@ def test_mux16():
 
 # multi-way variants
 def test_or8way():
-    for _ in range(NUMBER_OF_SAMPLES_PER_TEST):
+    for _ in range(NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST):
         xs = _sample_bits(8)
         assert gates.OR8WAY(xs) == any(xs)
 
 
 def test_mux4way16():
-    for _ in range(NUMBER_OF_SAMPLES_PER_TEST):
+    for _ in range(NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST):
         xs = _sample_bits(16)
         ys = _sample_bits(16)
         zs = _sample_bits(16)
@@ -136,7 +136,7 @@ def test_mux4way16():
 
 
 def test_mux8way16():
-    for _ in range(NUMBER_OF_SAMPLES_PER_TEST):
+    for _ in range(NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST):
         xs = [_sample_bits(16) for _ in range(8)]
         assert gates.MUX8WAY16(*xs, sel=(False, False, False)) == xs[0]
         assert gates.MUX8WAY16(*xs, sel=(False, False, True)) == xs[1]
