@@ -10,36 +10,36 @@ def _sample_bits(n: int) -> tuple:
 
 # elementary logic gates
 def test_and():
-    assert gates.AND(0, 0) == 0
-    assert gates.AND(0, 1) == 0
-    assert gates.AND(1, 0) == 0
-    assert gates.AND(1, 1) == 1
+    assert gates.AND(False, False) == False
+    assert gates.AND(False, True) == False
+    assert gates.AND(True, False) == False
+    assert gates.AND(True, True) == True
 
 
 def test_or():
-    assert gates.OR(0, 0) == 0
-    assert gates.OR(0, 1) == 1
-    assert gates.OR(1, 0) == 1
-    assert gates.OR(1, 1) == 1
+    assert gates.OR(False, False) == False
+    assert gates.OR(False, True) == True
+    assert gates.OR(True, False) == True
+    assert gates.OR(True, True) == True
 
 
 def test_not():
-    assert gates.NOT(0) == 1
-    assert gates.NOT(1) == 0
+    assert gates.NOT(False) == True
+    assert gates.NOT(True) == False
 
 
 def test_nand():
-    assert gates.NAND(0, 0) == 1
-    assert gates.NAND(0, 1) == 1
-    assert gates.NAND(1, 0) == 1
-    assert gates.NAND(1, 1) == 0
+    assert gates.NAND(False, False) == True
+    assert gates.NAND(False, True) == True
+    assert gates.NAND(True, False) == True
+    assert gates.NAND(True, True) == False
 
 
 def test_xor():
-    assert gates.XOR(0, 0) == 0
-    assert gates.XOR(0, 1) == 1
-    assert gates.XOR(1, 0) == 1
-    assert gates.XOR(1, 1) == 0
+    assert gates.XOR(False, False) == False
+    assert gates.XOR(False, True) == True
+    assert gates.XOR(True, False) == True
+    assert gates.XOR(True, True) == False
 
 
 def test_mux():
