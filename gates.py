@@ -36,7 +36,6 @@ def NOT(x: bool) -> bool:
     """Not gate."""
     # pre-conditions
     assert isinstance(x, bool), "`x` must be of type `bool`"
-    assert isinstance(y, bool), "`y` must be of type `bool`"
 
     # implementation
     out = not x
