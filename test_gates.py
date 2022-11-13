@@ -109,30 +109,11 @@ def test_or8way():
 
 def test_mux4way16():
     for _ in range(NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST):
-        xs = _sample_bits(16)
-        ys = _sample_bits(16)
-        zs = _sample_bits(16)
-        ws = _sample_bits(16)
-
-        for x, y, z, w, out in zip(
-            xs, ys, zs, ws, gates.MUX4WAY16(xs, ys, zs, ws, sel=(False, False))
-        ):
-            assert out == x
-
-        for x, y, z, w, out in zip(
-            xs, ys, zs, ws, gates.MUX4WAY16(xs, ys, zs, ws, sel=(False, True))
-        ):
-            assert out == y
-
-        for x, y, z, w, out in zip(
-            xs, ys, zs, ws, gates.MUX4WAY16(xs, ys, zs, ws, sel=(True, False))
-        ):
-            assert out == z
-
-        for x, y, z, w, out in zip(
-            xs, ys, zs, ws, gates.MUX4WAY16(xs, ys, zs, ws, sel=(True, True))
-        ):
-            assert out == w
+        xs = [_sample_bits(16) for _ in range(4)]
+        assert gates.MUX4WAY16(*xs, sel=(False, False)) == xs[0]
+        assert gates.MUX4WAY16(*xs, sel=(False, True)) == xs[1]
+        assert gates.MUX4WAY16(*xs, sel=(True, False)) == xs[2]
+        assert gates.MUX4WAY16(*xs, sel=(True, True)) == xs[3]
 
 
 def test_mux8way16():
