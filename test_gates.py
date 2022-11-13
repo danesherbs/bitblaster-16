@@ -17,6 +17,19 @@ def _sample_bits(n: int) -> tuple:
     return out
 
 
+def _make_one_hot(n: int, i: int) -> tuple:
+    """Returns an `n`-bit tuple of bools with a single `True` at index `i`."""
+    assert n >= 1 and isinstance(n, int), "`n` must be a positive integer"
+    assert i >= 0 and i < n and isinstance(i, int), "`i` must be an integer in [0, n)"
+    out = tuple(j == i for j in range(n))
+    assert (
+        isinstance(out, tuple)
+        and len(out) == n
+        and all(isinstance(x, bool) for x in out)
+    ), "output must be an `n`-bit tuple of bools"
+    return out
+
+
 # elementary logic gates
 def test_and():
     assert gates.AND(False, False) == False
@@ -139,83 +152,11 @@ def test_dmux4way():
 
 def test_dmux8way():
     for x in [True, False]:
-        assert gates.DMUX8WAY(x, sel=(False, False, False)) == (
-            x,
-            False,
-            False,
-            False,
-            False,
-            False,
-            False,
-            False,
-        )
-        assert gates.DMUX8WAY(x, sel=(False, False, True)) == (
-            False,
-            x,
-            False,
-            False,
-            False,
-            False,
-            False,
-            False,
-        )
-        assert gates.DMUX8WAY(x, sel=(False, True, False)) == (
-            False,
-            False,
-            x,
-            False,
-            False,
-            False,
-            False,
-            False,
-        )
-        assert gates.DMUX8WAY(x, sel=(False, True, True)) == (
-            False,
-            False,
-            False,
-            x,
-            False,
-            False,
-            False,
-            False,
-        )
-        assert gates.DMUX8WAY(x, sel=(True, False, False)) == (
-            False,
-            False,
-            False,
-            False,
-            x,
-            False,
-            False,
-            False,
-        )
-        assert gates.DMUX8WAY(x, sel=(True, False, True)) == (
-            False,
-            False,
-            False,
-            False,
-            False,
-            x,
-            False,
-            False,
-        )
-        assert gates.DMUX8WAY(x, sel=(True, True, False)) == (
-            False,
-            False,
-            False,
-            False,
-            False,
-            False,
-            x,
-            False,
-        )
-        assert gates.DMUX8WAY(x, sel=(True, True, True)) == (
-            False,
-            False,
-            False,
-            False,
-            False,
-            False,
-            False,
-            x,
-        )
+        assert gates.DMUX8WAY(x, sel=(False, False, False)) == _make_one_hot(n=8, i=0)
+        assert gates.DMUX8WAY(x, sel=(False, False, True)) == _make_one_hot(n=8, i=1)
+        assert gates.DMUX8WAY(x, sel=(False, True, False)) == _make_one_hot(n=8, i=2)
+        assert gates.DMUX8WAY(x, sel=(False, True, True)) == _make_one_hot(n=8, i=3)
+        assert gates.DMUX8WAY(x, sel=(True, False, False)) == _make_one_hot(n=8, i=4)
+        assert gates.DMUX8WAY(x, sel=(True, False, True)) == _make_one_hot(n=8, i=5)
+        assert gates.DMUX8WAY(x, sel=(True, True, False)) == _make_one_hot(n=8, i=6)
+        assert gates.DMUX8WAY(x, sel=(True, True, True)) == _make_one_hot(n=8, i=7)
