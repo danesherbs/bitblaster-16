@@ -376,7 +376,7 @@ def DMUX8WAY(
     Tuple[bool],
     Tuple[bool],
 ]:
-    """De-multiplexes a single input into eight outputs."""
+    """Channels the input to one out of eight outputs."""
     # pre-conditions
     assert isinstance(x, bool), "`x` must be of type `bool`"
     assert (
