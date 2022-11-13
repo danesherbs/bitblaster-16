@@ -4,27 +4,77 @@ from typing import Tuple
 # elementary logic gates
 def AND(x: bool, y: bool) -> bool:
     """And gate."""
-    return x and y
+    # pre-conditions
+    assert isinstance(x, bool), "`x` must be of type `bool`"
+    assert isinstance(y, bool), "`y` must be of type `bool`"
+
+    # implementation
+    out = x and y
+
+    # post-conditions
+    assert isinstance(out, bool), "Output must be of type `bool`"
+
+    return out
 
 
 def OR(x: bool, y: bool) -> bool:
     """Or gate."""
-    return x or y
+    # pre-conditions
+    assert isinstance(x, bool), "`x` must be of type `bool`"
+    assert isinstance(y, bool), "`y` must be of type `bool`"
+
+    # implementation
+    out = x or y
+
+    # post-conditions
+    assert isinstance(out, bool), "Output must be of type `bool`"
+
+    return out
 
 
 def NOT(x: bool) -> bool:
     """Not gate."""
-    return not x
+    # pre-conditions
+    assert isinstance(x, bool), "`x` must be of type `bool`"
+    assert isinstance(y, bool), "`y` must be of type `bool`"
+
+    # implementation
+    out = not x
+
+    # post-conditions
+    assert isinstance(out, bool), "Output must be of type `bool`"
+
+    return out
 
 
 def NAND(x: bool, y: bool) -> bool:
     """Nand gate."""
-    return not (x and y)
+    # pre-conditions
+    assert isinstance(x, bool), "`x` must be of type `bool`"
+    assert isinstance(y, bool), "`y` must be of type `bool`"
+
+    # implementation
+    out = not (x and y)
+
+    # post-conditions
+    assert isinstance(out, bool), "Output must be of type `bool`"
+
+    return out
 
 
 def XOR(x: bool, y: bool) -> bool:
     """Xor gate."""
-    return ((not x) and y) or (x and (not y))
+    # pre-conditions
+    assert isinstance(x, bool), "`x` must be of type `bool`"
+    assert isinstance(y, bool), "`y` must be of type `bool`"
+
+    # implementation
+    out = ((not x) and y) or (x and (not y))
+
+    # post-conditions
+    assert isinstance(out, bool), "Output must be of type `bool`"
+
+    return out
 
 
 def MUX(x: bool, y: bool, sel: bool) -> bool:
