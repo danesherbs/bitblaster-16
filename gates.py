@@ -365,7 +365,7 @@ def DMUX4WAY(
 
 
 def DMUX8WAY(
-    xs: Tuple[bool], sel: Tuple[bool]
+    x: bool, sel: Tuple[bool]
 ) -> Tuple[
     Tuple[bool],
     Tuple[bool],
@@ -377,4 +377,33 @@ def DMUX8WAY(
     Tuple[bool],
 ]:
     """De-multiplexes a single input into eight outputs."""
-    raise NotImplementedError()
+    # pre-conditions
+    assert isinstance(x, bool), "`x` must be of type `bool`"
+    assert (
+        isinstance(sel, tuple)
+        and len(sel) == 3
+        and all(isinstance(s, bool) for s in sel)
+    ), "`sel` must be a 3-tuple of `bool`s"
+
+    # implementation
+    x1, x2, x3, x4 = DMUX4WAY(x, sel=(sel[1], sel[2]))
+    x5, x6, x7, x8 = DMUX4WAY(x, sel=(sel[1], sel[2]))
+    out = (
+        (not sel[0]) and x1,
+        (not sel[0]) and x2,
+        (not sel[0]) and x3,
+        (not sel[0]) and x4,
+        sel[0] and x5,
+        sel[0] and x6,
+        sel[0] and x7,
+        sel[0] and x8,
+    )
+
+    # post-conditions
+    assert (
+        isinstance(out, tuple)
+        and len(out) == 8
+        and all(isinstance(x, bool) for x in out)
+    ), "Output must be a 8-tuple of `bool`s"
+
+    return out
