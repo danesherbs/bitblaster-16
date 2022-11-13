@@ -130,8 +130,92 @@ def test_mux8way16():
 
 
 def test_dmux4way():
-    raise NotImplementedError()
+    for x in [True, False]:
+        assert gates.DMUX4WAY(x, sel=(False, False)) == (x, False, False, False)
+        assert gates.DMUX4WAY(x, sel=(False, True)) == (False, x, False, False)
+        assert gates.DMUX4WAY(x, sel=(True, False)) == (False, False, x, False)
+        assert gates.DMUX4WAY(x, sel=(True, True)) == (False, False, False, x)
 
 
 def test_dmux8way():
-    raise NotImplementedError()
+    for x in [True, False]:
+        assert gates.DMUX8WAY(x, sel=(False, False, False)) == (
+            x,
+            False,
+            False,
+            False,
+            False,
+            False,
+            False,
+            False,
+        )
+        assert gates.DMUX8WAY(x, sel=(False, False, True)) == (
+            False,
+            x,
+            False,
+            False,
+            False,
+            False,
+            False,
+            False,
+        )
+        assert gates.DMUX8WAY(x, sel=(False, True, False)) == (
+            False,
+            False,
+            x,
+            False,
+            False,
+            False,
+            False,
+            False,
+        )
+        assert gates.DMUX8WAY(x, sel=(False, True, True)) == (
+            False,
+            False,
+            False,
+            x,
+            False,
+            False,
+            False,
+            False,
+        )
+        assert gates.DMUX8WAY(x, sel=(True, False, False)) == (
+            False,
+            False,
+            False,
+            False,
+            x,
+            False,
+            False,
+            False,
+        )
+        assert gates.DMUX8WAY(x, sel=(True, False, True)) == (
+            False,
+            False,
+            False,
+            False,
+            False,
+            x,
+            False,
+            False,
+        )
+        assert gates.DMUX8WAY(x, sel=(True, True, False)) == (
+            False,
+            False,
+            False,
+            False,
+            False,
+            False,
+            x,
+            False,
+        )
+        assert gates.DMUX8WAY(x, sel=(True, True, True)) == (
+            False,
+            False,
+            False,
+            False,
+            False,
+            False,
+            False,
+            x,
+        )
