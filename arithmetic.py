@@ -43,9 +43,50 @@ def FULLADDER(x: bool, y: bool, carry: bool) -> Tuple[bool, bool]:
     return out
 
 
-def ADD16(x: Tuple[bool], y: Tuple[bool]) -> Tuple[bool]:
-    pass
+def ADD16(xs: Tuple[bool], ys: Tuple[bool]) -> Tuple[bool]:
+    """Adds up two 16-bit two's complement numbers. Overflow is ignored."""
+    # pre-conditions
+    assert (
+        isinstance(xs, tuple) and len(xs) == 16 and all(isinstance(x, bool) for x in xs)
+    ), "`x` must be a 16-tuple of `bool`s"
+    assert (
+        isinstance(ys, tuple) and len(ys) == 16 and all(isinstance(y, bool) for y in ys)
+    ), "`y` must be a 16-tuple of `bool`s"
+
+    # implementation
+    out, carry = [False] * 16, False
+
+    for i, (x, y) in enumerate(zip(xs[::-1], ys[::-1])):
+        out[i], carry = FULLADDER(x, y, carry)
+
+    out = tuple(out[::-1])
+
+    # post-conditions
+    assert (
+        isinstance(out, tuple)
+        and len(out) == 16
+        and all(isinstance(o, bool) for o in out)
+    ), "`out must be a 16-tuple of `bool`s"
+
+    return out
 
 
-def INC16(x: Tuple[bool]) -> Tuple[bool]:
-    pass
+def INC16(xs: Tuple[bool]) -> Tuple[bool]:
+    """Adds 1 to input. Overflow is ignored."""
+    # pre-conditions
+    assert (
+        isinstance(xs, tuple) and len(xs) == 16 and all(isinstance(x, bool) for x in xs)
+    ), "`xs` must be a 16-tuple of `bool`s"
+
+    # implementation
+    one = (False,) * 15 + (True,)
+    out = ADD16(xs, one)
+
+    # post-conditions
+    assert (
+        isinstance(out, tuple)
+        and len(out) == 16
+        and all(isinstance(o, bool) for o in out)
+    ), "`out must be a 16-tuple of `bool`s"
+
+    return out
