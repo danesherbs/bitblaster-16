@@ -120,4 +120,26 @@ def ALU(
         zr: if True, `out` is 0
         ng: if True, `out` is negative
     """
-    pass
+    # pre-conditions
+    assert (
+        isinstance(xs, tuple) and len(xs) == 16 and all(isinstance(x, bool) for x in xs)
+    ), "`xs` must be a 16-tuple of `bool`s"
+    assert (
+        isinstance(ys, tuple) and len(ys) == 16 and all(isinstance(y, bool) for y in ys)
+    ), "`ys` must be a 16-tuple of `bool`s"
+    assert isinstance(zx, bool), "`zx` must be a `bool`"
+    assert isinstance(nx, bool), "`nx` must be a `bool`"
+    assert isinstance(zy, bool), "`zy` must be a `bool`"
+    assert isinstance(ny, bool), "`ny` must be a `bool`"
+    assert isinstance(f, bool), "`f` must be a `bool`"
+    assert isinstance(no, bool), "`no` must be a `bool`"
+
+    # implementation
+    out = None
+    zr = None
+    ng = None
+
+    # post-conditions
+    assert True
+
+    return out, zr, ng
