@@ -90,3 +90,34 @@ def INC16(xs: Tuple[bool]) -> Tuple[bool]:
     ), "`out must be a 16-tuple of `bool`s"
 
     return out
+
+
+def ALU(
+    xs: Tuple[bool],
+    ys: Tuple[bool],
+    zx: bool,
+    nx: bool,
+    zy: bool,
+    ny: bool,
+    f: bool,
+    no: bool,
+) -> Tuple[Tuple[bool], bool, bool]:
+    """
+    Performs arithmetic and logic operations on two 16-bit two's complement numbers. Overflow is ignored.
+
+    Args:
+        xs: 16-bit two's complement number
+        ys: 16-bit two's complement number
+        zx: if True, `xs` is set to 0
+        nx: if True, `xs` is negated
+        zy: if True, `ys` is set to 0
+        ny: if True, `ys` is negated
+        f: if True, `xs` and `ys` are added, otherwise they're anded
+        no: if True, the output is negated
+
+    Returns:
+        out: 16-bit two's complement number
+        zr: if True, `out` is 0
+        ng: if True, `out` is negative
+    """
+    pass
