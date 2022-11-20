@@ -1,3 +1,4 @@
+from gates import NOT16, OR16, MUX8WAY16
 from typing import Tuple
 
 
@@ -92,6 +93,26 @@ def INC16(xs: Tuple[bool]) -> Tuple[bool]:
     return out
 
 
+def NEG16(xs: Tuple[bool]) -> Tuple[bool]:
+    """Negates input."""
+    # pre-conditions
+    assert (
+        isinstance(xs, tuple) and len(xs) == 16 and all(isinstance(x, bool) for x in xs)
+    ), "`xs` must be a 16-tuple of `bool`s"
+
+    # implementation
+    out = INC16(NOT16(xs))
+
+    # post-conditions
+    assert (
+        isinstance(out, tuple)
+        and len(out) == 16
+        and all(isinstance(x, bool) for x in out)
+    ), "`out` must be a 16-tuple of `bool`s"
+
+    return out
+
+
 def ALU(
     xs: Tuple[bool],
     ys: Tuple[bool],
@@ -135,9 +156,11 @@ def ALU(
     assert isinstance(no, bool), "`no` must be a `bool`"
 
     # implementation
-    out = None
+    out = OR16((((((zx and nx) and zy) and ny) and f) and no))
     zr = None
     ng = None
+
+    MUX8WAY16()
 
     # post-conditions
     assert True
