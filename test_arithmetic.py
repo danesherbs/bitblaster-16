@@ -1,4 +1,7 @@
 import arithmetic
+import utils
+
+NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST = 1_000
 
 
 def test_halfadder():
@@ -29,6 +32,9 @@ def test_add16():
 def test_inc16():
     assert arithmetic.INC16((False,) * 16) == (False,) * 15 + (True,)
     assert arithmetic.INC16((True,) * 16) == (False,) * 16
+    assert arithmetic.INC16((True,) + (False,) * 15) == (True,) + (False,) * 14 + (
+        True,
+    )
 
 
 def test_neg16():
@@ -36,12 +42,31 @@ def test_neg16():
     assert arithmetic.NEG16((True,) * 16) == (False,) * 15 + (True,)
 
 
-def test_zero16():
-    assert arithmetic.ZERO16((False,) * 16, False) == (False,) * 16
-    assert arithmetic.ZERO16((False,) * 16, True) == (False,) * 16
-    assert arithmetic.ZERO16((True,) * 16, False) == (True,) * 16
-    assert arithmetic.ZERO16((True,) * 16, True) == (False,) * 16
-
-
 def test_alu():
-    pass
+    for _ in range(NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST):
+        xs = utils.sample_bits(16)
+        ys = utils.sample_bits(16)
+
+        # f(x, y) = 0
+        out, zr, ng = arithmetic.ALU(
+            xs, ys, zx=True, nx=False, zy=True, ny=False, f=True, no=False
+        )
+        assert out == (False,) * 16
+        assert zr == True
+        assert ng == False
+
+        # f(x, y) = 1
+        out, zr, ng = arithmetic.ALU(
+            xs, ys, zx=True, nx=True, zy=True, ny=True, f=True, no=True
+        )
+        assert out == (False,) * 15 + (True,)
+        assert zr == False
+        assert ng == False
+
+        # f(x, y) = -1
+        # assert (
+        #     arithmetic.ALU(
+        #         xs, ys, zx=True, nx=True, zy=True, ny=False, f=True, no=False
+        #     )
+        #     == (True,) * 16
+        # )
