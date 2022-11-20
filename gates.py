@@ -224,6 +224,22 @@ def OR8WAY(xs: Tuple[bool]) -> bool:
     return out
 
 
+def OR16WAY(xs: Tuple[bool]) -> bool:
+    """16-way Or."""
+    # pre-conditions
+    assert (
+        isinstance(xs, tuple) and len(xs) == 16 and all(isinstance(x, bool) for x in xs)
+    ), "`xs` must be an 16-tuple of `bool`s"
+
+    # implementation
+    out = OR(OR8WAY(xs[:8]), OR8WAY(xs[8:]))
+
+    # post-conditions
+    assert isinstance(out, bool), "Output must be of type `bool`"
+
+    return out
+
+
 def MUX4WAY16(
     xs: Tuple[bool], ys: Tuple[bool], zs: Tuple[bool], ws: Tuple[bool], sel: Tuple[bool]
 ) -> Tuple[bool]:
