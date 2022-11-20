@@ -1,4 +1,4 @@
-from gates import NOT16, OR16, MUX8WAY16
+from gates import NOT16, OR16, XOR, AND, MUX8WAY16, MUX16
 from typing import Tuple
 
 
@@ -9,8 +9,8 @@ def HALFADDER(x: bool, y: bool) -> Tuple[bool, bool]:
     assert isinstance(y, bool)
 
     # implementation
-    s = x or y
-    carry = x and y
+    s = XOR(x, y)
+    carry = AND(x, y)
     out = s, carry
 
     # post-conditions
@@ -30,8 +30,11 @@ def FULLADDER(x: bool, y: bool, carry: bool) -> Tuple[bool, bool]:
 
     # implementation
     fst_sum, fst_carry = HALFADDER(x, y)
-    new_sum, snd_carry = HALFADDER(fst_sum, carry)
+    snd_sum, snd_carry = HALFADDER(fst_sum, carry)
+
+    new_sum = snd_sum
     new_carry = fst_carry or snd_carry
+
     out = new_sum, new_carry
 
     # post-conditions
@@ -102,6 +105,28 @@ def NEG16(xs: Tuple[bool]) -> Tuple[bool]:
 
     # implementation
     out = INC16(NOT16(xs))
+
+    # post-conditions
+    assert (
+        isinstance(out, tuple)
+        and len(out) == 16
+        and all(isinstance(x, bool) for x in out)
+    ), "`out` must be a 16-tuple of `bool`s"
+
+    return out
+
+
+def ZERO16(xs: Tuple[bool], sel: bool) -> bool:
+    """Zeroes out input if `sel` is `True`."""
+    # pre-conditions
+    assert (
+        isinstance(xs, tuple) and len(xs) == 16 and all(isinstance(x, bool) for x in xs)
+    ), "`xs` must be a 16-tuple of `bool`s"
+    assert isinstance(sel, bool), "`sel` must be a `bool`"
+
+    # implementation
+    zero = (False,) * 16
+    out = MUX16(xs, zero, sel)
 
     # post-conditions
     assert (
