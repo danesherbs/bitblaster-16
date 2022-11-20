@@ -5,7 +5,7 @@ def test_halfadder():
     assert arithmetic.HALFADDER(False, False) == (False, False)
     assert arithmetic.HALFADDER(False, True) == (True, False)
     assert arithmetic.HALFADDER(True, False) == (True, False)
-    assert arithmetic.HALFADDER(True, True) == (True, True)
+    assert arithmetic.HALFADDER(True, True) == (False, True)
 
 
 def test_fulladder():
@@ -34,6 +34,13 @@ def test_inc16():
 def test_neg16():
     assert arithmetic.NEG16((False,) * 16) == (False,) * 16
     assert arithmetic.NEG16((True,) * 16) == (False,) * 15 + (True,)
+
+
+def test_zero16():
+    assert arithmetic.ZERO16((False,) * 16, False) == (False,) * 16
+    assert arithmetic.ZERO16((False,) * 16, True) == (False,) * 16
+    assert arithmetic.ZERO16((True,) * 16, False) == (True,) * 16
+    assert arithmetic.ZERO16((True,) * 16, True) == (False,) * 16
 
 
 def test_alu():
