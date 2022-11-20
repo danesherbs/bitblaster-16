@@ -1,33 +1,8 @@
 import gates
-import random
+import utils
 
 
 NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST = 1_000
-
-
-def _sample_bits(n: int) -> tuple:
-    """Returns a random `n`-bit tuple of bools."""
-    assert n >= 0 and isinstance(n, int), "`n` must be a non-negative integer"
-    out = tuple(random.choice([True, False]) for _ in range(n))
-    assert (
-        isinstance(out, tuple)
-        and len(out) == n
-        and all(isinstance(x, bool) for x in out)
-    ), "output must be an `n`-bit tuple of bools"
-    return out
-
-
-def _make_one_hot(n: int, i: int) -> tuple:
-    """Returns an `n`-bit tuple of bools with a single `True` at index `i`."""
-    assert n >= 1 and isinstance(n, int), "`n` must be a positive integer"
-    assert i >= 0 and i < n and isinstance(i, int), "`i` must be an integer in [0, n)"
-    out = tuple(j == i for j in range(n))
-    assert (
-        isinstance(out, tuple)
-        and len(out) == n
-        and all(isinstance(x, bool) for x in out)
-    ), "output must be an `n`-bit tuple of bools"
-    return out
 
 
 # elementary logic gates
@@ -80,31 +55,31 @@ def test_dmux():
 # 16-bit variants
 def test_not16():
     for _ in range(NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST):
-        xs = _sample_bits(16)
+        xs = utils.sample_bits(16)
         for x, not_x in zip(xs, gates.NOT16(xs)):
             assert not_x == (not x)
 
 
 def test_and16():
     for _ in range(NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST):
-        xs = _sample_bits(16)
-        ys = _sample_bits(16)
+        xs = utils.sample_bits(16)
+        ys = utils.sample_bits(16)
         for x, y, x_and_y in zip(xs, ys, gates.AND16(xs, ys)):
             assert x_and_y == (x and y)
 
 
 def test_or16():
     for _ in range(NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST):
-        xs = _sample_bits(16)
-        ys = _sample_bits(16)
+        xs = utils.sample_bits(16)
+        ys = utils.sample_bits(16)
         for x, y, x_or_y in zip(xs, ys, gates.OR16(xs, ys)):
             assert x_or_y == (x or y)
 
 
 def test_mux16():
     for _ in range(NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST):
-        xs = _sample_bits(16)
-        ys = _sample_bits(16)
+        xs = utils.sample_bits(16)
+        ys = utils.sample_bits(16)
         assert gates.MUX16(xs, ys, sel=False) == xs
         assert gates.MUX16(xs, ys, sel=True) == ys
 
@@ -112,13 +87,13 @@ def test_mux16():
 # multi-way variants
 def test_or8way():
     for _ in range(NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST):
-        xs = _sample_bits(8)
+        xs = utils.sample_bits(8)
         assert gates.OR8WAY(xs) == any(xs)
 
 
 def test_mux4way16():
     for _ in range(NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST):
-        xs = [_sample_bits(16) for _ in range(4)]
+        xs = [utils.sample_bits(16) for _ in range(4)]
         assert gates.MUX4WAY16(*xs, sel=(False, False)) == xs[0]
         assert gates.MUX4WAY16(*xs, sel=(False, True)) == xs[1]
         assert gates.MUX4WAY16(*xs, sel=(True, False)) == xs[2]
@@ -127,7 +102,7 @@ def test_mux4way16():
 
 def test_mux8way16():
     for _ in range(NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST):
-        xs = [_sample_bits(16) for _ in range(8)]
+        xs = [utils.sample_bits(16) for _ in range(8)]
         assert gates.MUX8WAY16(*xs, sel=(False, False, False)) == xs[0]
         assert gates.MUX8WAY16(*xs, sel=(False, False, True)) == xs[1]
         assert gates.MUX8WAY16(*xs, sel=(False, True, False)) == xs[2]
@@ -147,14 +122,22 @@ def test_dmux4way():
 
 
 def test_dmux8way():
-    assert gates.DMUX8WAY(True, sel=(False, False, False)) == _make_one_hot(n=8, i=0)
-    assert gates.DMUX8WAY(True, sel=(False, False, True)) == _make_one_hot(n=8, i=1)
-    assert gates.DMUX8WAY(True, sel=(False, True, False)) == _make_one_hot(n=8, i=2)
-    assert gates.DMUX8WAY(True, sel=(False, True, True)) == _make_one_hot(n=8, i=3)
-    assert gates.DMUX8WAY(True, sel=(True, False, False)) == _make_one_hot(n=8, i=4)
-    assert gates.DMUX8WAY(True, sel=(True, False, True)) == _make_one_hot(n=8, i=5)
-    assert gates.DMUX8WAY(True, sel=(True, True, False)) == _make_one_hot(n=8, i=6)
-    assert gates.DMUX8WAY(True, sel=(True, True, True)) == _make_one_hot(n=8, i=7)
+    assert gates.DMUX8WAY(True, sel=(False, False, False)) == utils.make_one_hot(
+        n=8, i=0
+    )
+    assert gates.DMUX8WAY(True, sel=(False, False, True)) == utils.make_one_hot(
+        n=8, i=1
+    )
+    assert gates.DMUX8WAY(True, sel=(False, True, False)) == utils.make_one_hot(
+        n=8, i=2
+    )
+    assert gates.DMUX8WAY(True, sel=(False, True, True)) == utils.make_one_hot(n=8, i=3)
+    assert gates.DMUX8WAY(True, sel=(True, False, False)) == utils.make_one_hot(
+        n=8, i=4
+    )
+    assert gates.DMUX8WAY(True, sel=(True, False, True)) == utils.make_one_hot(n=8, i=5)
+    assert gates.DMUX8WAY(True, sel=(True, True, False)) == utils.make_one_hot(n=8, i=6)
+    assert gates.DMUX8WAY(True, sel=(True, True, True)) == utils.make_one_hot(n=8, i=7)
     assert gates.DMUX8WAY(False, sel=(False, False, False)) == (False,) * 8
     assert gates.DMUX8WAY(False, sel=(False, False, True)) == (False,) * 8
     assert gates.DMUX8WAY(False, sel=(False, True, False)) == (False,) * 8
