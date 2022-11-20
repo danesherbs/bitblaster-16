@@ -1,5 +1,8 @@
-from gates import NOT16, OR16, XOR, AND, MUX8WAY16, MUX16
+from gates import NOT, NOT16, AND16, OR16WAY, XOR, AND, MUX16
 from typing import Tuple
+
+
+ZERO16 = (False,) * 16
 
 
 def HALFADDER(x: bool, y: bool) -> Tuple[bool, bool]:
@@ -116,17 +119,27 @@ def NEG16(xs: Tuple[bool]) -> Tuple[bool]:
     return out
 
 
-def ZERO16(xs: Tuple[bool], sel: bool) -> bool:
-    """Zeroes out input if `sel` is `True`."""
+def _PRESET16(xs: Tuple[bool], zx: bool, nx: bool) -> Tuple[bool]:
+    """Prepares input for ALU. Zeroes out input if `zx` is `True` then negates input if `nx` is `True`."""
     # pre-conditions
     assert (
         isinstance(xs, tuple) and len(xs) == 16 and all(isinstance(x, bool) for x in xs)
     ), "`xs` must be a 16-tuple of `bool`s"
-    assert isinstance(sel, bool), "`sel` must be a `bool`"
+    assert isinstance(zx, bool), "`zx` must be a `bool`"
+    assert isinstance(nx, bool), "`nx` must be a `bool`"
 
     # implementation
-    zero = (False,) * 16
-    out = MUX16(xs, zero, sel)
+    zeroed = MUX16(
+        xs,
+        ZERO16,
+        zx,
+    )
+
+    out = MUX16(
+        zeroed,
+        NEG16(zeroed),
+        nx,
+    )
 
     # post-conditions
     assert (
@@ -181,13 +194,31 @@ def ALU(
     assert isinstance(no, bool), "`no` must be a `bool`"
 
     # implementation
-    out = OR16((((((zx and nx) and zy) and ny) and f) and no))
-    zr = None
-    ng = None
+    tx = _PRESET16(xs, zx, nx)
+    ty = _PRESET16(ys, zy, ny)
 
-    MUX8WAY16()
+    out = MUX16(
+        ADD16(tx, ty),
+        AND16(tx, ty),
+        f,
+    )
+
+    tout = MUX16(
+        out,
+        NEG16(out),
+        no,
+    )
+
+    zr = NOT(OR16WAY(tout))
+    ng = tout[0]
 
     # post-conditions
-    assert True
+    assert (
+        isinstance(out, tuple)
+        and len(out) == 16
+        and all(isinstance(x, bool) for x in out)
+    ), "`out` must be a 16-tuple of `bool`s"
+    assert isinstance(zr, bool), "`zr` must be a `bool`"
+    assert isinstance(ng, bool), "`ng` must be a `bool`"
 
-    return out, zr, ng
+    return tout, zr, ng
