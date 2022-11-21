@@ -114,7 +114,7 @@ def test_alu_f_of_x_and_y_equals_y():
         )
         assert out == ys
         assert zr == all(y == False for y in ys)
-        assert ng == (ys[0] == True)
+        assert ng == (out[0] == True)
 
 
 def test_alu_f_of_x_and_y_equals_not_x():
@@ -122,10 +122,38 @@ def test_alu_f_of_x_and_y_equals_not_x():
         xs = utils.sample_bits(16)
         ys = utils.sample_bits(16)
 
-        # f(x, y) = y
+        # f(x, y) = !x
         out, zr, ng = arithmetic.ALU(
             xs, ys, zx=False, nx=False, zy=True, ny=True, f=False, no=True
         )
         assert out == gates.NOT16(xs)
         assert zr == all(x == False for x in xs)
-        assert ng == (gates.NOT(xs[0]) == True)
+        assert ng == (out[0] == True)
+
+
+def test_alu_f_of_x_and_y_equals_not_y():
+    for _ in range(NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST):
+        xs = utils.sample_bits(16)
+        ys = utils.sample_bits(16)
+
+        # f(x, y) = !y
+        out, zr, ng = arithmetic.ALU(
+            xs, ys, zx=True, nx=True, zy=False, ny=False, f=False, no=True
+        )
+        assert out == gates.NOT16(ys)
+        assert zr == all(y == False for y in ys)
+        assert ng == (out[0] == True)
+
+
+def test_alu_f_of_x_and_y_equals_negative_x():
+    for _ in range(NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST):
+        xs = utils.sample_bits(16)
+        ys = utils.sample_bits(16)
+
+        # f(x, y) = -x
+        out, zr, ng = arithmetic.ALU(
+            xs, ys, zx=False, nx=False, zy=True, ny=True, f=True, no=True
+        )
+        assert out == arithmetic.INC16(gates.NOT16(xs))
+        assert zr == all(x == False for x in ys)
+        assert ng == (out[0] == True)
