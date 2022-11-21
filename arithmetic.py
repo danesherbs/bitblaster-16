@@ -137,7 +137,7 @@ def _PRESET16(xs: Tuple[bool], zx: bool, nx: bool) -> Tuple[bool]:
 
     out = MUX16(
         zeroed,
-        NEG16(zeroed),
+        NOT16(zeroed),
         nx,
     )
 
@@ -198,14 +198,14 @@ def ALU(
     ty = _PRESET16(ys, zy, ny)
 
     out = MUX16(
-        ADD16(tx, ty),
         AND16(tx, ty),
+        ADD16(tx, ty),
         f,
     )
 
     tout = MUX16(
         out,
-        NEG16(out),
+        NOT16(out),
         no,
     )
 
