@@ -64,9 +64,9 @@ def test_alu():
         assert ng == False
 
         # f(x, y) = -1
-        # assert (
-        #     arithmetic.ALU(
-        #         xs, ys, zx=True, nx=True, zy=True, ny=False, f=True, no=False
-        #     )
-        #     == (True,) * 16
-        # )
+        out, zr, ng = arithmetic.ALU(
+            xs, ys, zx=True, nx=True, zy=True, ny=False, f=True, no=False
+        )
+        assert out == (True,) * 16
+        assert zr == False
+        assert ng == True
