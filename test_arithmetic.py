@@ -1,4 +1,5 @@
 import arithmetic
+import gates
 import utils
 
 NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST = 1_000
@@ -42,7 +43,7 @@ def test_neg16():
     assert arithmetic.NEG16((True,) * 16) == (False,) * 15 + (True,)
 
 
-def test_alu():
+def test_alu_f_of_x_and_y_equals_zero():
     for _ in range(NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST):
         xs = utils.sample_bits(16)
         ys = utils.sample_bits(16)
@@ -51,22 +52,80 @@ def test_alu():
         out, zr, ng = arithmetic.ALU(
             xs, ys, zx=True, nx=False, zy=True, ny=False, f=True, no=False
         )
+
         assert out == (False,) * 16
         assert zr == True
         assert ng == False
+
+
+def test_alu_f_of_x_and_y_equals_one():
+    for _ in range(NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST):
+        xs = utils.sample_bits(16)
+        ys = utils.sample_bits(16)
 
         # f(x, y) = 1
         out, zr, ng = arithmetic.ALU(
             xs, ys, zx=True, nx=True, zy=True, ny=True, f=True, no=True
         )
+
         assert out == (False,) * 15 + (True,)
         assert zr == False
         assert ng == False
+
+
+def test_alu_f_of_x_and_y_equals_negative_one():
+    for _ in range(NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST):
+        xs = utils.sample_bits(16)
+        ys = utils.sample_bits(16)
 
         # f(x, y) = -1
         out, zr, ng = arithmetic.ALU(
             xs, ys, zx=True, nx=True, zy=True, ny=False, f=True, no=False
         )
+
         assert out == (True,) * 16
         assert zr == False
         assert ng == True
+
+
+def test_alu_f_of_x_and_y_equals_x():
+    for _ in range(NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST):
+        xs = utils.sample_bits(16)
+        ys = utils.sample_bits(16)
+
+        # f(x, y) = x
+        out, zr, ng = arithmetic.ALU(
+            xs, ys, zx=False, nx=False, zy=True, ny=True, f=False, no=False
+        )
+
+        assert out == xs
+        assert zr == all(x == False for x in xs)
+        assert ng == (xs[0] == True)
+
+
+def test_alu_f_of_x_and_y_equals_y():
+    for _ in range(NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST):
+        xs = utils.sample_bits(16)
+        ys = utils.sample_bits(16)
+
+        # f(x, y) = y
+        out, zr, ng = arithmetic.ALU(
+            xs, ys, zx=True, nx=True, zy=False, ny=False, f=False, no=False
+        )
+        assert out == ys
+        assert zr == all(y == False for y in ys)
+        assert ng == (ys[0] == True)
+
+
+def test_alu_f_of_x_and_y_equals_not_x():
+    for _ in range(NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST):
+        xs = utils.sample_bits(16)
+        ys = utils.sample_bits(16)
+
+        # f(x, y) = y
+        out, zr, ng = arithmetic.ALU(
+            xs, ys, zx=False, nx=False, zy=True, ny=True, f=False, no=True
+        )
+        assert out == gates.NOT16(xs)
+        assert zr == all(x == False for x in xs)
+        assert ng == (gates.NOT(xs[0]) == True)
