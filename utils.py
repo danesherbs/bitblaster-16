@@ -1,4 +1,5 @@
 import random
+from typing import Any
 
 
 def sample_bits(n: int) -> tuple:
@@ -24,3 +25,7 @@ def make_one_hot(n: int, i: int) -> tuple:
         and all(isinstance(x, bool) for x in out)
     ), "output must be an `n`-bit tuple of bools"
     return out
+
+def is_n_bit_vector(xs: Any, n: int) -> bool:
+    """Returns `True` iff `xs` is a tuple of bools of length `n`."""
+    return isinstance(xs, tuple) and len(xs) == n and all(isinstance(b, bool) for b in xs)

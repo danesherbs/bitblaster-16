@@ -1,11 +1,12 @@
 from gates import NOT, NOT16, AND16, OR16WAY, XOR, AND, MUX16
 from typing import Tuple
+from utils import is_n_bit_vector
 
 
 ZERO16 = (False,) * 16
 
 
-def HALFADDER(x: bool, y: bool) -> Tuple[bool, bool]:
+def HALFADDER(x: bool, y: bool) -> tuple[bool, bool]:
     """Adds up 2 bits."""
     # pre-conditions
     assert isinstance(x, bool)
@@ -17,14 +18,12 @@ def HALFADDER(x: bool, y: bool) -> Tuple[bool, bool]:
     out = s, carry
 
     # post-conditions
-    assert isinstance(out, tuple)
-    assert len(out) == 2
-    assert all(isinstance(o, bool) for o in out)
+    assert is_n_bit_vector(out, n=2)
 
     return out
 
 
-def FULLADDER(x: bool, y: bool, carry: bool) -> Tuple[bool, bool]:
+def FULLADDER(x: bool, y: bool, carry: bool) -> tuple[bool, bool]:
     """Adds up 3 bits."""
     # pre-conditions
     assert isinstance(x, bool)
@@ -41,24 +40,16 @@ def FULLADDER(x: bool, y: bool, carry: bool) -> Tuple[bool, bool]:
     out = new_sum, new_carry
 
     # post-conditions
-    assert (
-        isinstance(out, tuple)
-        and len(out) == 2
-        and all(isinstance(o, bool) for o in out)
-    ), "Output must be 2-tuple of `bool`s"
+    assert is_n_bit_vector(out, n=2), "Output must be 2-tuple of `bool`s"
 
     return out
 
 
-def ADD16(xs: Tuple[bool], ys: Tuple[bool]) -> Tuple[bool]:
+def ADD16(xs: tuple[bool, ...], ys: tuple[bool, ...]) -> tuple[bool, ...]:
     """Adds up two 16-bit two's complement numbers. Overflow is ignored."""
     # pre-conditions
-    assert (
-        isinstance(xs, tuple) and len(xs) == 16 and all(isinstance(x, bool) for x in xs)
-    ), "`x` must be a 16-tuple of `bool`s"
-    assert (
-        isinstance(ys, tuple) and len(ys) == 16 and all(isinstance(y, bool) for y in ys)
-    ), "`y` must be a 16-tuple of `bool`s"
+    assert is_n_bit_vector(xs, n=16), "`x` must be a 16-tuple of `bool`s"
+    assert is_n_bit_vector(ys, n=16), "`y` must be a 16-tuple of `bool`s"
 
     # implementation
     out, carry = [False] * 16, False
@@ -66,65 +57,47 @@ def ADD16(xs: Tuple[bool], ys: Tuple[bool]) -> Tuple[bool]:
     for i, (x, y) in enumerate(zip(xs[::-1], ys[::-1])):
         out[i], carry = FULLADDER(x, y, carry)
 
-    out = tuple(out[::-1])
+    out = tuple(out[::-1])  # type: ignore
 
     # post-conditions
-    assert (
-        isinstance(out, tuple)
-        and len(out) == 16
-        and all(isinstance(o, bool) for o in out)
-    ), "`out must be a 16-tuple of `bool`s"
+    assert is_n_bit_vector(out, n=16), "`out` must be a 16-tuple of `bool`s"
 
-    return out
+    return out  # type: ignore
 
 
-def INC16(xs: Tuple[bool]) -> Tuple[bool]:
+def INC16(xs: tuple[bool, ...]) -> tuple[bool, ...]:
     """Adds 1 to input. Overflow is ignored."""
     # pre-conditions
-    assert (
-        isinstance(xs, tuple) and len(xs) == 16 and all(isinstance(x, bool) for x in xs)
-    ), "`xs` must be a 16-tuple of `bool`s"
+    assert is_n_bit_vector(xs, n=16), "`xs` must be a 16-tuple of `bool`s"
 
     # implementation
     one = (False,) * 15 + (True,)
     out = ADD16(xs, one)
 
     # post-conditions
-    assert (
-        isinstance(out, tuple)
-        and len(out) == 16
-        and all(isinstance(o, bool) for o in out)
-    ), "`out must be a 16-tuple of `bool`s"
+    assert is_n_bit_vector(out, n=16), "`out` must be a 16-tuple of `bool`s"
 
     return out
 
 
-def NEG16(xs: Tuple[bool]) -> Tuple[bool]:
+def NEG16(xs: tuple[bool, ...]) -> tuple[bool, ...]:
     """Negates input."""
     # pre-conditions
-    assert (
-        isinstance(xs, tuple) and len(xs) == 16 and all(isinstance(x, bool) for x in xs)
-    ), "`xs` must be a 16-tuple of `bool`s"
+    assert is_n_bit_vector(xs, n=16), "`xs` must be a 16-tuple of `bool`s"
 
     # implementation
     out = INC16(NOT16(xs))
 
     # post-conditions
-    assert (
-        isinstance(out, tuple)
-        and len(out) == 16
-        and all(isinstance(x, bool) for x in out)
-    ), "`out` must be a 16-tuple of `bool`s"
+    assert is_n_bit_vector(out, n=16), "`out` must be a 16-tuple of `bool`s"
 
     return out
 
 
-def _PRESET16(xs: Tuple[bool], zx: bool, nx: bool) -> Tuple[bool]:
+def _PRESET16(xs: tuple[bool, ...], zx: bool, nx: bool) -> tuple[bool, ...]:
     """Prepares input for ALU. Zeroes out input if `zx` is `True` then negates input if `nx` is `True`."""
     # pre-conditions
-    assert (
-        isinstance(xs, tuple) and len(xs) == 16 and all(isinstance(x, bool) for x in xs)
-    ), "`xs` must be a 16-tuple of `bool`s"
+    assert is_n_bit_vector(xs, n=16), "`xs` must be a 16-tuple of `bool`s"
     assert isinstance(zx, bool), "`zx` must be a `bool`"
     assert isinstance(nx, bool), "`nx` must be a `bool`"
 
@@ -142,25 +115,21 @@ def _PRESET16(xs: Tuple[bool], zx: bool, nx: bool) -> Tuple[bool]:
     )
 
     # post-conditions
-    assert (
-        isinstance(out, tuple)
-        and len(out) == 16
-        and all(isinstance(x, bool) for x in out)
-    ), "`out` must be a 16-tuple of `bool`s"
+    assert is_n_bit_vector(out, n=16), "`out` must be a 16-tuple of `bool`s"
 
     return out
 
 
 def ALU(
-    xs: Tuple[bool],
-    ys: Tuple[bool],
+    xs: tuple[bool, ...],
+    ys: tuple[bool, ...],
     zx: bool,
     nx: bool,
     zy: bool,
     ny: bool,
     f: bool,
     no: bool,
-) -> Tuple[Tuple[bool], bool, bool]:
+) -> tuple[tuple[bool, ...], bool, bool]:
     """
     Performs arithmetic and logic operations on two 16-bit two's complement numbers. Overflow is ignored.
 
@@ -180,12 +149,8 @@ def ALU(
         ng: if True, `out` is negative
     """
     # pre-conditions
-    assert (
-        isinstance(xs, tuple) and len(xs) == 16 and all(isinstance(x, bool) for x in xs)
-    ), "`xs` must be a 16-tuple of `bool`s"
-    assert (
-        isinstance(ys, tuple) and len(ys) == 16 and all(isinstance(y, bool) for y in ys)
-    ), "`ys` must be a 16-tuple of `bool`s"
+    assert is_n_bit_vector(xs, n=16), "`xs` must be a 16-tuple of `bool`s"
+    assert is_n_bit_vector(ys, n=16), "`ys` must be a 16-tuple of `bool`s"
     assert isinstance(zx, bool), "`zx` must be a `bool`"
     assert isinstance(nx, bool), "`nx` must be a `bool`"
     assert isinstance(zy, bool), "`zy` must be a `bool`"
@@ -213,11 +178,7 @@ def ALU(
     ng = tout[0]
 
     # post-conditions
-    assert (
-        isinstance(out, tuple)
-        and len(out) == 16
-        and all(isinstance(x, bool) for x in out)
-    ), "`out` must be a 16-tuple of `bool`s"
+    assert is_n_bit_vector(out, n=16), "`out` must be a 16-tuple of `bool`s"
     assert isinstance(zr, bool), "`zr` must be a `bool`"
     assert isinstance(ng, bool), "`ng` must be a `bool`"
 

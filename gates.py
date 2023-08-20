@@ -1,4 +1,4 @@
-from typing import Tuple
+from utils import is_n_bit_vector
 
 
 # elementary logic gates
@@ -96,7 +96,7 @@ def MUX(x: bool, y: bool, sel: bool) -> bool:
     return out
 
 
-def DMUX(x: bool, sel: bool) -> Tuple[bool, bool]:
+def DMUX(x: bool, sel: bool) -> tuple[bool, bool]:
     """Channels the input to one out of two outputs."""
     # pre-conditions
     assert isinstance(x, bool), "`x` must be of type `bool`"
@@ -116,102 +116,70 @@ def DMUX(x: bool, sel: bool) -> Tuple[bool, bool]:
 
 
 # 16-bit variants
-def NOT16(xs: Tuple[bool]) -> Tuple[bool]:
+def NOT16(xs: tuple[bool, ...]) -> tuple[bool, ...]:
     """16-bit Not."""
     # pre-conditions
-    assert (
-        isinstance(xs, tuple) and len(xs) == 16 and all(isinstance(x, bool) for x in xs)
-    ), "`xs` must be 16-tuple of `bool`s"
+    assert is_n_bit_vector(xs, n=16), "`xs` must be 16-tuple of `bool`s"
 
     # implementation
     out = tuple(not x for x in xs)
 
     # post-conditions
-    assert (
-        isinstance(out, tuple)
-        and len(out) == 16
-        and all(isinstance(o, bool) for o in out)
-    ), "Output must be 16-tuple of `bool`s"
+    assert is_n_bit_vector(out, n=16), "Output must be 16-tuple of `bool`s"
 
     return out
 
 
-def AND16(xs: Tuple[bool], ys: Tuple[bool]) -> Tuple[bool]:
+def AND16(xs: tuple[bool, ...], ys: tuple[bool, ...]) -> tuple[bool, ...]:
     """16-bit And."""
     # pre-conditions
-    assert (
-        isinstance(xs, tuple) and len(xs) == 16 and all(isinstance(x, bool) for x in xs)
-    ), "`xs` must be 16-tuple of `bool`s"
-    assert (
-        isinstance(ys, tuple) and len(ys) == 16 and all(isinstance(y, bool) for y in ys)
-    ), "`ys` must be 16-tuple of `bool`s"
+    assert is_n_bit_vector(xs, n=16), "`xs` must be 16-tuple of `bool`s"
+    assert is_n_bit_vector(ys, n=16), "`ys` must be 16-tuple of `bool`s"
 
     # implementation
     out = tuple(x and y for x, y in zip(xs, ys))
 
     # post-conditions
-    assert (
-        isinstance(out, tuple)
-        and len(out) == 16
-        and all(isinstance(o, bool) for o in out)
-    ), "Output must be 16-tuple of `bool`s"
+    assert is_n_bit_vector(out, n=16), "Output must be 16-tuple of `bool`s"
 
     return out
 
 
-def OR16(xs: Tuple[bool], ys: Tuple[bool]) -> Tuple[bool]:
+def OR16(xs: tuple[bool, ...], ys: tuple[bool, ...]) -> tuple[bool, ...]:
     """16-bit Or."""
     # pre-conditions
-    assert (
-        isinstance(xs, tuple) and len(xs) == 16 and all(isinstance(x, bool) for x in xs)
-    ), "`xs` must be 16-tuple of `bool`s"
-    assert (
-        isinstance(ys, tuple) and len(ys) == 16 and all(isinstance(y, bool) for y in ys)
-    ), "`ys` must be 16-tuple of `bool`s"
+    assert is_n_bit_vector(xs, n=16), "`xs` must be 16-tuple of `bool`s"
+    assert is_n_bit_vector(ys, n=16), "`ys` must be 16-tuple of `bool`s"
 
     # implementation
     out = tuple(x or y for x, y in zip(xs, ys))
 
     # post-conditions
-    assert (
-        isinstance(out, tuple)
-        and len(out) == 16
-        and all(isinstance(o, bool) for o in out)
-    ), "Output must be 16-tuple of `bool`s"
+    assert is_n_bit_vector(out, n=16), "Output must be 16-tuple of `bool`s"
 
     return out
 
 
-def MUX16(xs: Tuple[bool], ys: Tuple[bool], sel: bool) -> Tuple[bool]:
+def MUX16(xs: tuple[bool, ...], ys: tuple[bool, ...], sel: bool) -> tuple[bool, ...]:
     """Selects between two 16-bit inputs."""
     # pre-conditions
-    assert (
-        isinstance(xs, tuple) and len(xs) == 16 and all(isinstance(x, bool) for x in xs)
-    ), "`xs` must be 16-tuple of `bool`s"
-    assert (
-        isinstance(ys, tuple) and len(ys) == 16 and all(isinstance(y, bool) for y in ys)
-    ), "`ys` must be 16-tuple of `bool`s"
+    assert is_n_bit_vector(xs, n=16), "`xs` must be 16-tuple of `bool`s"
+    assert is_n_bit_vector(ys, n=16), "`ys` must be 16-tuple of `bool`s"
 
     # implementation
     out = tuple(MUX(x, y, sel) for x, y in zip(xs, ys))
 
     # post-conditions
-    assert (
-        isinstance(out, tuple)
-        and len(out) == 16
-        and all(isinstance(o, bool) for o in out)
-    ), "Output must be 16-tuple of `bool`s"
+    assert is_n_bit_vector(out, n=16), "Output must be 16-tuple of `bool`s"
 
     return out
 
 
 # multi-way variants
-def OR8WAY(xs: Tuple[bool]) -> bool:
+def OR8WAY(xs: tuple[bool, ...]) -> bool:
     """8-way Or."""
     # pre-conditions
-    assert (
-        isinstance(xs, tuple) and len(xs) == 8 and all(isinstance(x, bool) for x in xs)
-    ), "`xs` must be an 8-tuple of `bool`s"
+    assert is_n_bit_vector(xs, n=8), "`xs` must be an 8-tuple of `bool`s"
 
     # implementation
     out = xs[0] or (
@@ -224,12 +192,10 @@ def OR8WAY(xs: Tuple[bool]) -> bool:
     return out
 
 
-def OR16WAY(xs: Tuple[bool]) -> bool:
+def OR16WAY(xs: tuple[bool, ...]) -> bool:
     """16-way Or."""
     # pre-conditions
-    assert (
-        isinstance(xs, tuple) and len(xs) == 16 and all(isinstance(x, bool) for x in xs)
-    ), "`xs` must be an 16-tuple of `bool`s"
+    assert is_n_bit_vector(xs, n=16), "`xs` must be an 16-tuple of `bool`s"
 
     # implementation
     out = OR(OR8WAY(xs[:8]), OR8WAY(xs[8:]))
@@ -241,27 +207,19 @@ def OR16WAY(xs: Tuple[bool]) -> bool:
 
 
 def MUX4WAY16(
-    xs: Tuple[bool], ys: Tuple[bool], zs: Tuple[bool], ws: Tuple[bool], sel: Tuple[bool]
-) -> Tuple[bool]:
+    xs: tuple[bool, ...],
+    ys: tuple[bool, ...],
+    zs: tuple[bool, ...],
+    ws: tuple[bool, ...],
+    sel: tuple[bool, ...],
+) -> tuple[bool, ...]:
     """Selects between four 16-bit inputs."""
     # pre-conditions
-    assert (
-        isinstance(xs, tuple) and len(xs) == 16 and all(isinstance(x, bool) for x in xs)
-    ), "`xs` must be a 16-tuple of `bool`s"
-    assert (
-        isinstance(ys, tuple) and len(ys) == 16 and all(isinstance(y, bool) for y in ys)
-    ), "`ys` must be a 16-tuple of `bool`s"
-    assert (
-        isinstance(zs, tuple) and len(zs) == 16 and all(isinstance(z, bool) for z in zs)
-    ), "`zs` must be a 16-tuple of `bool`s"
-    assert (
-        isinstance(ws, tuple) and len(ws) == 16 and all(isinstance(w, bool) for w in ws)
-    ), "`ws` must be a 16-tuple of `bool`s"
-    assert (
-        isinstance(sel, tuple)
-        and len(sel) == 2
-        and all(isinstance(s, bool) for s in sel)
-    ), "`sel` must be a 2-tuple of `bool`s"
+    assert is_n_bit_vector(xs, n=16), "`xs` must be a 16-tuple of `bool`s"
+    assert is_n_bit_vector(ys, n=16), "`ys` must be a 16-tuple of `bool`s"
+    assert is_n_bit_vector(zs, n=16), "`zs` must be a 16-tuple of `bool`s"
+    assert is_n_bit_vector(ws, n=16), "`ws` must be a 16-tuple of `bool`s"
+    assert is_n_bit_vector(sel, n=2), "`sel` must be a 2-tuple of `bool`s"
 
     # implementation
     out = MUX16(
@@ -279,57 +237,33 @@ def MUX4WAY16(
     )
 
     # post-conditions
-    assert (
-        isinstance(out, tuple)
-        and len(out) == 16
-        and all(isinstance(o, bool) for o in out)
-    ), "Output must be 16-tuple of `bool`s"
+    assert is_n_bit_vector(out, n=16), "Output must be 16-tuple of `bool`s"
 
     return out
 
 
 def MUX8WAY16(
-    xs: Tuple[bool],
-    ys: Tuple[bool],
-    zs: Tuple[bool],
-    ws: Tuple[bool],
-    us: Tuple[bool],
-    vs: Tuple[bool],
-    ms: Tuple[bool],
-    ns: Tuple[bool],
-    sel: Tuple[bool],
-) -> Tuple[bool]:
+    xs: tuple[bool, ...],
+    ys: tuple[bool, ...],
+    zs: tuple[bool, ...],
+    ws: tuple[bool, ...],
+    us: tuple[bool, ...],
+    vs: tuple[bool, ...],
+    ms: tuple[bool, ...],
+    ns: tuple[bool, ...],
+    sel: tuple[bool, ...],
+) -> tuple[bool, ...]:
     """Selects between eight 16-bit inputs."""
     # pre-conditions
-    assert (
-        isinstance(xs, tuple) and len(xs) == 16 and all(isinstance(x, bool) for x in xs)
-    ), "`xs` must be a 16-tuple of `bool`s"
-    assert (
-        isinstance(ys, tuple) and len(ys) == 16 and all(isinstance(y, bool) for y in ys)
-    ), "`ys` must be a 16-tuple of `bool`s"
-    assert (
-        isinstance(zs, tuple) and len(zs) == 16 and all(isinstance(z, bool) for z in zs)
-    ), "`zs` must be a 16-tuple of `bool`s"
-    assert (
-        isinstance(ws, tuple) and len(ws) == 16 and all(isinstance(w, bool) for w in ws)
-    ), "`ws` must be a 16-tuple of `bool`s"
-    assert (
-        isinstance(us, tuple) and len(us) == 16 and all(isinstance(u, bool) for u in us)
-    ), "`us` must be a 16-tuple of `bool`s"
-    assert (
-        isinstance(vs, tuple) and len(vs) == 16 and all(isinstance(v, bool) for v in vs)
-    ), "`vs` must be a 16-tuple of `bool`s"
-    assert (
-        isinstance(ms, tuple) and len(ms) == 16 and all(isinstance(m, bool) for m in ms)
-    ), "`ms` must be a 16-tuple of `bool`s"
-    assert (
-        isinstance(ns, tuple) and len(ns) == 16 and all(isinstance(n, bool) for n in ns)
-    ), "`ns` must be a 16-tuple of `bool`s"
-    assert (
-        isinstance(sel, tuple)
-        and len(sel) == 3
-        and all(isinstance(s, bool) for s in sel)
-    ), "`sel` must be a 3-tuple of `bool`s"
+    assert is_n_bit_vector(xs, n=16), "`xs` must be a 16-tuple of `bool`s"
+    assert is_n_bit_vector(ys, n=16), "`ys` must be a 16-tuple of `bool`s"
+    assert is_n_bit_vector(zs, n=16), "`zs` must be a 16-tuple of `bool`s"
+    assert is_n_bit_vector(ws, n=16), "`ws` must be a 16-tuple of `bool`s"
+    assert is_n_bit_vector(us, n=16), "`us` must be a 16-tuple of `bool`s"
+    assert is_n_bit_vector(vs, n=16), "`vs` must be a 16-tuple of `bool`s"
+    assert is_n_bit_vector(ms, n=16), "`ms` must be a 16-tuple of `bool`s"
+    assert is_n_bit_vector(ns, n=16), "`ns` must be a 16-tuple of `bool`s"
+    assert is_n_bit_vector(sel, n=3), "`sel` must be a 3-tuple of `bool`s"
 
     # implementation
     out = MUX16(
@@ -339,26 +273,16 @@ def MUX8WAY16(
     )
 
     # post-conditions
-    assert (
-        isinstance(out, tuple)
-        and len(out) == 16
-        and all(isinstance(o, bool) for o in out)
-    ), "Output must be 16-tuple of `bool`s"
+    assert is_n_bit_vector(out, n=16), "Output must be 16-tuple of `bool`s"
 
     return out
 
 
-def DMUX4WAY(
-    x: bool, sel: Tuple[bool]
-) -> Tuple[Tuple[bool], Tuple[bool], Tuple[bool], Tuple[bool]]:
+def DMUX4WAY(x: bool, sel: tuple[bool, ...]) -> tuple[bool, bool, bool, bool]:
     """Channels the input to one out of four outputs."""
     # pre-conditions
     assert isinstance(x, bool), "`x` must be of type `bool`"
-    assert (
-        isinstance(sel, tuple)
-        and len(sel) == 2
-        and all(isinstance(s, bool) for s in sel)
-    ), "`sel` must be a 2-tuple of `bool`s"
+    assert is_n_bit_vector(sel, n=2), "`sel` must be a 2-tuple of `bool`s"
 
     # implementation
     x1, x2 = DMUX(x, sel[1])
@@ -371,35 +295,18 @@ def DMUX4WAY(
     )
 
     # post-conditions
-    assert (
-        isinstance(out, tuple)
-        and len(out) == 4
-        and all(isinstance(x, bool) for x in out)
-    ), "Output must be a 4-tuple of `bool`s"
+    assert is_n_bit_vector(out, n=4), "Output must be a 4-tuple of `bool`s"
 
     return out
 
 
 def DMUX8WAY(
-    x: bool, sel: Tuple[bool]
-) -> Tuple[
-    Tuple[bool],
-    Tuple[bool],
-    Tuple[bool],
-    Tuple[bool],
-    Tuple[bool],
-    Tuple[bool],
-    Tuple[bool],
-    Tuple[bool],
-]:
+    x: bool, sel: tuple[bool, ...]
+) -> tuple[bool, bool, bool, bool, bool, bool, bool, bool]:
     """Channels the input to one out of eight outputs."""
     # pre-conditions
     assert isinstance(x, bool), "`x` must be of type `bool`"
-    assert (
-        isinstance(sel, tuple)
-        and len(sel) == 3
-        and all(isinstance(s, bool) for s in sel)
-    ), "`sel` must be a 3-tuple of `bool`s"
+    assert is_n_bit_vector(sel, n=3), "`sel` must be a 3-tuple of `bool`s"
 
     # implementation
     x1, x2, x3, x4 = DMUX4WAY(x, sel=(sel[1], sel[2]))
@@ -416,10 +323,6 @@ def DMUX8WAY(
     )
 
     # post-conditions
-    assert (
-        isinstance(out, tuple)
-        and len(out) == 8
-        and all(isinstance(x, bool) for x in out)
-    ), "Output must be a 8-tuple of `bool`s"
+    assert is_n_bit_vector(out, n=8), "Output must be a 8-tuple of `bool`s"
 
     return out
