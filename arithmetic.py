@@ -12,7 +12,7 @@ def HALFADDER(x: bool, y: bool) -> tuple[bool, bool]:
     assert isinstance(x, bool)
     assert isinstance(y, bool)
 
-    # implementation
+    # body
     s = XOR(x, y)
     carry = AND(x, y)
     out = s, carry
@@ -30,7 +30,7 @@ def FULLADDER(x: bool, y: bool, carry: bool) -> tuple[bool, bool]:
     assert isinstance(y, bool)
     assert isinstance(carry, bool)
 
-    # implementation
+    # body
     fst_sum, fst_carry = HALFADDER(x, y)
     snd_sum, snd_carry = HALFADDER(fst_sum, carry)
 
@@ -51,7 +51,7 @@ def ADD16(xs: tuple[bool, ...], ys: tuple[bool, ...]) -> tuple[bool, ...]:
     assert is_n_bit_vector(xs, n=16), "`x` must be a 16-tuple of `bool`s"
     assert is_n_bit_vector(ys, n=16), "`y` must be a 16-tuple of `bool`s"
 
-    # implementation
+    # body
     out, carry = [False] * 16, False
 
     for i, (x, y) in enumerate(zip(xs[::-1], ys[::-1])):
@@ -70,7 +70,7 @@ def INC16(xs: tuple[bool, ...]) -> tuple[bool, ...]:
     # pre-conditions
     assert is_n_bit_vector(xs, n=16), "`xs` must be a 16-tuple of `bool`s"
 
-    # implementation
+    # body
     one = (False,) * 15 + (True,)
     out = ADD16(xs, one)
 
@@ -85,9 +85,9 @@ def NEG16(xs: tuple[bool, ...]) -> tuple[bool, ...]:
     # pre-conditions
     assert is_n_bit_vector(xs, n=16), "`xs` must be a 16-tuple of `bool`s"
 
-    # implementation
+    # body
     out = INC16(NOT16(xs))
-
+    
     # post-conditions
     assert is_n_bit_vector(out, n=16), "`out` must be a 16-tuple of `bool`s"
 
@@ -101,7 +101,7 @@ def _PRESET16(xs: tuple[bool, ...], zx: bool, nx: bool) -> tuple[bool, ...]:
     assert isinstance(zx, bool), "`zx` must be a `bool`"
     assert isinstance(nx, bool), "`nx` must be a `bool`"
 
-    # implementation
+    # body
     zeroed = MUX16(
         xs,
         ZERO16,
@@ -158,7 +158,7 @@ def ALU(
     assert isinstance(f, bool), "`f` must be a `bool`"
     assert isinstance(no, bool), "`no` must be a `bool`"
 
-    # implementation
+    # body
     tx = _PRESET16(xs, zx, nx)
     ty = _PRESET16(ys, zy, ny)
 
