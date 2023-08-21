@@ -81,6 +81,7 @@ def MUX(x: bool, y: bool, sel: bool) -> bool:
     # pre-conditions
     assert isinstance(x, bool), "`x` must be of type `bool`"
     assert isinstance(y, bool), "`y` must be of type `bool`"
+    assert isinstance(sel, bool), "`sel` must be of type `bool`"
 
     # body
     out = (
