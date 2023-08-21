@@ -64,33 +64,30 @@ class BIT:
 class REGISTER:
     """A 16-bit register."""
 
-    value: tuple[bool, ...]
-    dff: tuple[DFF, ...]
+    bits: tuple[BIT, ...]
 
     def __post_init__(self) -> None:
-        assert is_n_bit_vector(self.value, n=16), "`value` must be a 16-bit vector"
-        assert is_n_bit_vector(self.dff, n=16), "`dff` must be a 16-tuple of `DFF`s"
+        assert all(isinstance(b, BIT) for b in self.bits), "`bits` must be `BIT`s"
+        assert len(self.bits) == 16, "`bits` must be a 16-tuple of `BIT`s"
 
-    def __call__(self, value: tuple[bool, ...], load: bool) -> "REGISTER":
+    def __call__(self, values: tuple[bool, ...], load: bool) -> "REGISTER":
         # pre-conditions
-        assert is_n_bit_vector(value, n=16), "`value` must be a 16-tuple of `bool`s"
+        assert is_n_bit_vector(values, n=16), "`value` must be a 16-tuple of `bool`s"
         assert isinstance(load, bool), "`load` must be a `bool`"
 
         # body
-        old_value = self.value
-        new_value = MUX16(old_value, value, load)
-        new_dff = tuple(dff(v) for dff, v in zip(self.dff, new_value))
-        new_register = REGISTER(new_value, new_dff)
-
+        new_bits = tuple(bit(v, load) for bit, v in zip(self.bits, values))
+        new_register = REGISTER(new_bits)
+        
         # post-conditions
         assert isinstance(new_register, REGISTER), "`new_register` must be a `REGISTER`"
 
         if load:
-            assert new_register.value == value, "new value must be stored when load=1"
+            assert all(b.value == v for b, v in zip(new_register.bits, values)), "new value must be stored when load=1"
 
         if not load:
-            assert new_register.value == old_value, "old value must be kept when load=0"
-
+            assert all(new_b.value == old_b.value for new_b, old_b in zip(new_register.bits, self.bits)), "old value must be kept when load=0"
+        
         return new_register
 
 
