@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from gates import MUX, DMUX, DMUX8WAY
+from gates import MUX, DMUX8WAY
 from utils import is_n_bit_vector, bool_tuple_to_int
 
 
