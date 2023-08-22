@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from gates import MUX, DMUX8WAY
+from gates import MUX, DMUX4WAY, DMUX8WAY
 from utils import is_n_bit_vector, bool_tuple_to_int
 
 
@@ -309,5 +309,59 @@ class RAM4K:
 
         for ram512 in self.ram512s:
             output += ram512.out
+
+        return output
+
+@dataclass(frozen=True)
+class RAM16K:
+    """16,384-register memory, each 16-bits."""
+
+    ram4ks: tuple[RAM4K, ...]
+
+    def __post_init__(self) -> None:
+        assert all(
+            isinstance(r, RAM4K) for r in self.ram4ks
+        ), "`ram4ks` must be a tuple of `RAM4K`s"
+        assert len(self.ram4ks) == 4, "`ram4ks` must be a 4-tuple of `RAM4K`s"
+    
+    def __call__(
+        self,
+        xs: tuple[bool, ...],
+        load: bool,
+        address: tuple[bool, ...],
+    ) -> "RAM16K":
+        # pre-conditions
+        assert is_n_bit_vector(xs, n=16), "`xs` must be a 16-tuple of `bool`s"
+        assert isinstance(load, bool), "`load` must be a `bool`"
+        assert is_n_bit_vector(address, n=14), "`address` must be a 14-tuple of `bool`s"
+
+        # body
+        load_bits = DMUX4WAY(load, address[:2])
+        new_ram4ks = tuple(
+            r(xs, load_bits[i], address[2:]) for i, r in enumerate(self.ram4ks)
+        )
+        new_ram16k = RAM16K(new_ram4ks)
+
+        # post-conditions
+        assert isinstance(new_ram16k, RAM16K), "`new_ram16k` must be a `RAM16K`"
+        assert all(
+            isinstance(r, RAM4K) for r in new_ram16k.ram4ks
+        ), "`new_ram16k.ram4ks` must be an 4-tuple of `RAM4K`s"
+
+        if load:
+            address_idx = bool_tuple_to_int(address)
+            assert new_ram16k.out[address_idx] == xs, "new value must be stored when load=1"
+        
+        if not load:
+            assert self.out == new_ram16k.out, "old value must be kept when load=0"
+
+        return new_ram16k
+
+    @property
+    def out(self) -> tuple[tuple[bool, ...], ...]:
+        output: tuple[tuple[bool, ...], ...] = ()
+
+        for ram4k in self.ram4ks:
+            output += ram4k.out
 
         return output
