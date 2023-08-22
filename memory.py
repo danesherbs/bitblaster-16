@@ -1,7 +1,9 @@
 from dataclasses import dataclass
-from gates import MUX, DMUX4WAY, DMUX8WAY
+from gates import MUX, MUX16, DMUX4WAY, DMUX8WAY
+from arithmetic import INC16
 from utils import is_n_bit_vector, bool_tuple_to_int
 
+ZERO16 = (False,) * 16
 
 @dataclass(frozen=True)
 class DFF:
@@ -63,7 +65,7 @@ class BIT:
 
 
 @dataclass(frozen=True)
-class REGISTER:
+class REGISTER16:
     """A 16-bit register."""
 
     bits: tuple[BIT, ...]
@@ -72,17 +74,19 @@ class REGISTER:
         assert all(isinstance(b, BIT) for b in self.bits), "`bits` must be `BIT`s"
         assert len(self.bits) == 16, "`bits` must be a 16-tuple of `BIT`s"
 
-    def __call__(self, xs: tuple[bool, ...], load: bool) -> "REGISTER":
+    def __call__(self, xs: tuple[bool, ...], load: bool) -> "REGISTER16":
         # pre-conditions
         assert is_n_bit_vector(xs, n=16), "`xs` must be a 16-tuple of `bool`s"
         assert isinstance(load, bool), "`load` must be a `bool`"
 
         # body
         new_bits = tuple(bit(x, load) for bit, x in zip(self.bits, xs))
-        new_register = REGISTER(new_bits)
+        new_register = REGISTER16(new_bits)
 
         # post-conditions
-        assert isinstance(new_register, REGISTER), "`new_register` must be a `REGISTER`"
+        assert isinstance(
+            new_register, REGISTER16
+        ), "`new_register` must be a `REGISTER16`"
 
         if load:
             assert all(
@@ -103,13 +107,15 @@ class REGISTER:
 class RAM8:
     """8-register memory, each 16-bits."""
 
-    registers: tuple[REGISTER, ...]
+    registers: tuple[REGISTER16, ...]
 
     def __post_init__(self) -> None:
         assert all(
-            isinstance(r, REGISTER) for r in self.registers
-        ), "`registers` must be a tuple of `REGISTER`s"
-        assert len(self.registers) == 8, "`registers` must be a 8-tuple of `REGISTER`s"
+            isinstance(r, REGISTER16) for r in self.registers
+        ), "`registers` must be a tuple of `REGISTER16`s"
+        assert (
+            len(self.registers) == 8
+        ), "`registers` must be a 8-tuple of `REGISTER16`s"
 
     def __call__(
         self,
@@ -130,8 +136,8 @@ class RAM8:
         # post-conditions
         assert isinstance(new_ram8, RAM8), "`new_ram8` must be a `RAM8`"
         assert all(
-            isinstance(r, REGISTER) for r in new_ram8.registers
-        ), "`new_ram8.registers` must be an 8-tuple of `REGISTER`s"
+            isinstance(r, REGISTER16) for r in new_ram8.registers
+        ), "`new_ram8.registers` must be an 8-tuple of `REGISTER16`s"
 
         if load:
             address_idx = bool_tuple_to_int(address)
@@ -188,7 +194,9 @@ class RAM64:
 
         if load:
             address_idx = bool_tuple_to_int(address)
-            assert new_ram64.out[address_idx] == xs, "new value must be stored when load=1"
+            assert (
+                new_ram64.out[address_idx] == xs
+            ), "new value must be stored when load=1"
 
         if not load:
             assert self.out == new_ram64.out, "old value must be kept when load=0"
@@ -201,8 +209,9 @@ class RAM64:
 
         for ram8 in self.ram8s:
             output += ram8.out
-    
+
         return output
+
 
 @dataclass(frozen=True)
 class RAM512:
@@ -242,7 +251,9 @@ class RAM512:
 
         if load:
             address_idx = bool_tuple_to_int(address)
-            assert new_ram512.out[address_idx] == xs, "new value must be stored when load=1"
+            assert (
+                new_ram512.out[address_idx] == xs
+            ), "new value must be stored when load=1"
 
         if not load:
             assert self.out == new_ram512.out, "old value must be kept when load=0"
@@ -258,6 +269,7 @@ class RAM512:
 
         return output
 
+
 @dataclass(frozen=True)
 class RAM4K:
     """4,096-register memory, each 16-bits."""
@@ -269,7 +281,7 @@ class RAM4K:
             isinstance(r, RAM512) for r in self.ram512s
         ), "`ram512s` must be a tuple of `RAM512`s"
         assert len(self.ram512s) == 8, "`ram512s` must be a 8-tuple of `RAM8`s"
-    
+
     def __call__(
         self,
         xs: tuple[bool, ...],
@@ -296,7 +308,9 @@ class RAM4K:
 
         if load:
             address_idx = bool_tuple_to_int(address)
-            assert new_ram4k.out[address_idx] == xs, "new value must be stored when load=1"
+            assert (
+                new_ram4k.out[address_idx] == xs
+            ), "new value must be stored when load=1"
 
         if not load:
             assert self.out == new_ram4k.out, "old value must be kept when load=0"
@@ -312,6 +326,7 @@ class RAM4K:
 
         return output
 
+
 @dataclass(frozen=True)
 class RAM16K:
     """16,384-register memory, each 16-bits."""
@@ -323,7 +338,7 @@ class RAM16K:
             isinstance(r, RAM4K) for r in self.ram4ks
         ), "`ram4ks` must be a tuple of `RAM4K`s"
         assert len(self.ram4ks) == 4, "`ram4ks` must be a 4-tuple of `RAM4K`s"
-    
+
     def __call__(
         self,
         xs: tuple[bool, ...],
@@ -350,8 +365,10 @@ class RAM16K:
 
         if load:
             address_idx = bool_tuple_to_int(address)
-            assert new_ram16k.out[address_idx] == xs, "new value must be stored when load=1"
-        
+            assert (
+                new_ram16k.out[address_idx] == xs
+            ), "new value must be stored when load=1"
+
         if not load:
             assert self.out == new_ram16k.out, "old value must be kept when load=0"
 
@@ -365,3 +382,54 @@ class RAM16K:
             output += ram4k.out
 
         return output
+
+
+@dataclass(frozen=True)
+class PCOUNTER:
+    """A 16-bit counter with load, inc and reset control bits."""
+
+    register: REGISTER16
+
+    def __post_init__(self) -> None:
+        assert isinstance(self.register, REGISTER16), "`register` must be a `REGISTER16`"
+
+    def __call__(
+        self,
+        xs: tuple[bool, ...],
+        load: bool,
+        inc: bool,
+        reset: bool,
+    ) -> "PCOUNTER":
+        # pre-conditions
+        assert is_n_bit_vector(xs, n=16), "`xs` must be a 16-tuple of `bool`s"
+        assert isinstance(load, bool), "`load` must be a `bool`"
+        assert isinstance(inc, bool), "`inc` must be a `bool`"
+        assert isinstance(reset, bool), "`reset` must be a `bool`"
+
+        # body
+        a = MUX16(self.out, INC16(self.out), inc)
+        b = MUX16(a, xs, load)
+        c = MUX16(b, ZERO16, reset)
+        new_register = self.register(c, True)
+        new_pcounter = PCOUNTER(new_register)
+        
+        # post-conditions
+        assert isinstance(new_pcounter, PCOUNTER), "`new_pcounter` must be a `PCOUNTER`"
+        assert isinstance(
+            new_pcounter.register, REGISTER16
+        ), "`new_pcounter.register` must be a `REGISTER16`"
+
+        if reset:
+            assert new_pcounter.out == ZERO16, "counter must be reset when reset=1"
+        elif load:
+            assert new_pcounter.out == xs, "new value must be stored when load=1"
+        elif inc:
+            assert new_pcounter.out == INC16(self.out), "counter must be incremented"
+        else:
+            assert new_pcounter.out == self.out, "counter must be unchanged"
+
+        return new_pcounter
+
+    @property
+    def out(self) -> tuple[bool, ...]:
+        return self.register.out

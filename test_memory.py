@@ -2,9 +2,11 @@ import pytest
 import random
 import utils
 
-from memory import DFF, BIT, REGISTER, RAM8, RAM64, RAM512, RAM4K, RAM16K
+from arithmetic import INC16
+from memory import DFF, BIT, REGISTER16, RAM8, RAM64, RAM512, RAM4K, RAM16K, PCOUNTER
 
-NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST = 8
+NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST = 16
+ZERO16 = (False,) * 16
 
 
 def _create_random_dff() -> DFF:
@@ -17,9 +19,9 @@ def _create_random_bit() -> BIT:
     return BIT(dff)
 
 
-def _create_random_register() -> REGISTER:
+def _create_random_register() -> REGISTER16:
     bits = tuple(_create_random_bit() for _ in range(16))
-    return REGISTER(bits)
+    return REGISTER16(bits)
 
 
 def _create_random_ram8() -> RAM8:
@@ -40,6 +42,7 @@ def _create_random_ram512() -> RAM512:
 def _create_random_ram4k() -> RAM4K:
     ram512s = tuple(_create_random_ram512() for _ in range(8))
     return RAM4K(ram512s)
+
 
 def _create_random_ram16k() -> RAM16K:
     ram4ks = tuple(_create_random_ram4k() for _ in range(4))
@@ -108,7 +111,7 @@ def test_bit(initial_value: bool, new_value: bool, load: bool) -> None:
     ],
 )
 def test_register(
-    register: REGISTER,
+    register: REGISTER16,
     xs: tuple[bool, ...],
     load: bool,
 ) -> None:
@@ -253,9 +256,7 @@ def test_ram512(
         if i == address_idx:
             continue  # skip the address index
 
-        assert (
-            new_out[i] == old_out[i]
-        ), f"register at index {i} should not change"
+        assert new_out[i] == old_out[i], f"register at index {i} should not change"
 
 
 @pytest.mark.parametrize(
@@ -294,9 +295,8 @@ def test_ram4k(
         if i == address_idx:
             continue  # skip the address index
 
-        assert (
-            new_out[i] == old_out[i]
-        ), f"register at index {i} should not change"
+        assert new_out[i] == old_out[i], f"register at index {i} should not change"
+
 
 @pytest.mark.parametrize(
     "ram16k, xs, load, address",
@@ -330,10 +330,24 @@ def test_ram16k(
     if not load:
         assert old_out == new_out, "old value must be kept when load=0"
 
-    for i in range(2 ** 14):
+    for i in range(2**14):
         if i == address_idx:
             continue  # skip the address index
-        
-        assert (
-            new_out[i] == old_out[i]
-        ), f"register at index {i} should not change"
+
+        assert new_out[i] == old_out[i], f"register at index {i} should not change"
+
+
+def test_pc() -> None:
+    # Given
+    xs = utils.sample_bits(16)
+    register = _create_random_register()
+    pc = PCOUNTER(register)
+
+    # When / Then
+    assert pc(xs, False, False, False).out == pc.out
+    assert pc(xs, False, False, True).out == ZERO16
+    assert pc(xs, False, True, False).out == INC16(pc.out)
+    assert pc(xs, True, False, False).out == xs
+    assert pc(xs, True, False, True).out == ZERO16
+    assert pc(xs, True, True, False).out == xs
+    assert pc(xs, True, True, True).out == ZERO16
