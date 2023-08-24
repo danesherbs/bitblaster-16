@@ -30,13 +30,34 @@ def make_one_hot(n: int, i: int) -> tuple:
 
     return out
 
+
 def is_n_bit_vector(xs: Any, n: int) -> bool:
     """Returns `True` iff `xs` is a tuple of bools of length `n`."""
-    return isinstance(xs, tuple) and len(xs) == n and all(isinstance(b, bool) for b in xs)
+    if not isinstance(xs, tuple):
+        return False
+    
+    if len(xs) != n:
+        return False
+    
+    if not all(isinstance(b, bool) for b in xs):
+        return False
 
-def bool_tuple_to_int(bool_values: tuple[bool, ...]) -> int:
+    return True
+
+
+def bool_tuple_to_int(bs: tuple[bool, ...]) -> int:
     """Converts a tuple of boolean values into an integer."""
-    int_values = [int(value) for value in bool_values]
+    # pre-conditions
+    assert isinstance(bs, tuple), "input must be a tuple"
+    assert all(isinstance(b, bool) for b in bs), "input must be a tuple of bools"
+
+    # body
+    int_values = [int(value) for value in bs]
     str_values = [str(value) for value in int_values]
     binary_repr = "".join(str_values)
-    return int(binary_repr, 2)
+    out = int(binary_repr, 2)
+
+    # post-conditions
+    assert isinstance(out, int), "output must be an integer"
+    
+    return out
