@@ -45,7 +45,7 @@ def is_n_bit_vector(xs: Any, n: int) -> bool:
     return True
 
 
-def bool_tuple_to_int(bs: tuple[bool, ...]) -> int:
+def to_int(bs: tuple[bool, ...]) -> int:
     """Converts a tuple of boolean values into an integer."""
     # pre-conditions
     assert isinstance(bs, tuple), "input must be a tuple"

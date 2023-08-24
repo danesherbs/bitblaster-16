@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from gates import MUX, MUX16, DMUX4WAY, DMUX8WAY
 from arithmetic import INC16
-from utils import is_n_bit_vector, bool_tuple_to_int
+from utils import is_n_bit_vector, to_int
 
 ZERO16 = (False,) * 16
 
@@ -141,7 +141,7 @@ class RAM8:
         ), "`new_ram8.registers` must be an 8-tuple of `REGISTER16`s"
 
         if load:
-            address_idx = bool_tuple_to_int(address)
+            address_idx = to_int(address)
             selected_register = new_ram8.registers[address_idx]
             assert all(
                 v == x for v, x in zip(selected_register.out, xs)
@@ -194,7 +194,7 @@ class RAM64:
         ), "`new_ram64.ram8s` must be an 8-tuple of `RAM8`s"
 
         if load:
-            address_idx = bool_tuple_to_int(address)
+            address_idx = to_int(address)
             assert (
                 new_ram64.out[address_idx] == xs
             ), "new value must be stored when load=1"
@@ -251,7 +251,7 @@ class RAM512:
         ), "`new_ram512.ram64s` must be an 8-tuple of `RAM64`s"
 
         if load:
-            address_idx = bool_tuple_to_int(address)
+            address_idx = to_int(address)
             assert (
                 new_ram512.out[address_idx] == xs
             ), "new value must be stored when load=1"
@@ -308,7 +308,7 @@ class RAM4K:
         ), "`new_ram4k.ram512s` must be an 8-tuple of `RAM512`s"
 
         if load:
-            address_idx = bool_tuple_to_int(address)
+            address_idx = to_int(address)
             assert (
                 new_ram4k.out[address_idx] == xs
             ), "new value must be stored when load=1"
@@ -365,7 +365,7 @@ class RAM16K:
         ), "`new_ram16k.ram4ks` must be an 4-tuple of `RAM4K`s"
 
         if load:
-            address_idx = bool_tuple_to_int(address)
+            address_idx = to_int(address)
             assert (
                 new_ram16k.out[address_idx] == xs
             ), "new value must be stored when load=1"
@@ -451,5 +451,5 @@ class ROM32K:
         assert len(self.registers) == 2**15, "`registers` must be a 32,768-tuple"
 
     def __call__(self, address: tuple[bool, ...]) -> tuple[bool, ...]:
-        register_idx = bool_tuple_to_int(address)
+        register_idx = to_int(address)
         return self.registers[register_idx]

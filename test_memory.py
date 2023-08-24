@@ -152,7 +152,7 @@ def test_ram8(
     new_ram8 = ram8(xs, load, address)
 
     # Then
-    address_idx = utils.bool_tuple_to_int(address)
+    address_idx = utils.to_int(address)
 
     if load:
         assert all(
@@ -203,7 +203,7 @@ def test_ram64(
     new_ram64 = ram64(xs, load, address)
 
     # Then
-    address_idx = utils.bool_tuple_to_int(address)
+    address_idx = utils.to_int(address)
 
     if load:
         assert new_ram64.out[address_idx] == xs, "new value must be stored when load=1"
@@ -242,7 +242,7 @@ def test_ram512(
     new_ram512 = ram512(xs, load, address)
 
     # Then
-    address_idx = utils.bool_tuple_to_int(address)
+    address_idx = utils.to_int(address)
     old_out = ram512.out
     new_out = new_ram512.out
 
@@ -281,7 +281,7 @@ def test_ram4k(
     new_ram4k = ram4k(xs, load, address)
 
     # Then
-    address_idx = utils.bool_tuple_to_int(address)
+    address_idx = utils.to_int(address)
     old_out = ram4k.out
     new_out = new_ram4k.out
 
@@ -320,7 +320,7 @@ def test_ram16k(
     new_ram16k = ram16k(xs, load, address)
 
     # Then
-    address_idx = utils.bool_tuple_to_int(address)
+    address_idx = utils.to_int(address)
     old_out = ram16k.out
     new_out = new_ram16k.out
 
