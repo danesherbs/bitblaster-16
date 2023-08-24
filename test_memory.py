@@ -50,7 +50,7 @@ def _create_random_ram16k() -> RAM16K:
 
 
 @pytest.mark.parametrize(
-    "initial_value, new_value",
+    "initial_value, x",
     [
         (False, True),
         (False, False),
@@ -58,20 +58,20 @@ def _create_random_ram16k() -> RAM16K:
         (True, False),
     ],
 )
-def test_dff(initial_value: bool, new_value: bool) -> None:
+def test_dff(initial_value: bool, x: bool) -> None:
     # Given
     dff = DFF(initial_value)
 
     # When
-    new_dff = dff(new_value)
-
+    new_dff = dff(x)
+    
     # Then
     assert dff.out == initial_value
-    assert new_dff.out == new_value
+    assert new_dff.out == x
 
 
 @pytest.mark.parametrize(
-    "initial_value, new_value, load",
+    "initial_value, x, load",
     [
         (False, False, False),
         (False, True, False),
@@ -83,17 +83,17 @@ def test_dff(initial_value: bool, new_value: bool) -> None:
         (True, True, True),
     ],
 )
-def test_bit(initial_value: bool, new_value: bool, load: bool) -> None:
+def test_bit(initial_value: bool, x: bool, load: bool) -> None:
     # Given
-    initial_dff = DFF(initial_value)
-    bit = BIT(initial_dff)
+    dff = DFF(initial_value)
+    bit = BIT(dff)
 
     # When
-    new_bit = bit(new_value, load)
+    new_bit = bit(x, load)
 
     # Then
     if load:
-        assert new_bit.out == new_value
+        assert new_bit.out == x
 
     if not load:
         assert new_bit.out == initial_value
