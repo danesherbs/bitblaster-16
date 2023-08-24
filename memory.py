@@ -5,6 +5,7 @@ from utils import is_n_bit_vector, bool_tuple_to_int
 
 ZERO16 = (False,) * 16
 
+
 @dataclass(frozen=True)
 class DFF:
     """A data flip-flop gate that stores a single bit from the previous timestep. This should be called on the edge of each clock signal. This is a primitive component."""
@@ -391,7 +392,9 @@ class PCOUNTER:
     register: REGISTER16
 
     def __post_init__(self) -> None:
-        assert isinstance(self.register, REGISTER16), "`register` must be a `REGISTER16`"
+        assert isinstance(
+            self.register, REGISTER16
+        ), "`register` must be a `REGISTER16`"
 
     def __call__(
         self,
@@ -412,7 +415,7 @@ class PCOUNTER:
         c = MUX16(b, ZERO16, reset)
         new_register = self.register(c, True)
         new_pcounter = PCOUNTER(new_register)
-        
+
         # post-conditions
         assert isinstance(new_pcounter, PCOUNTER), "`new_pcounter` must be a `PCOUNTER`"
         assert isinstance(
@@ -433,3 +436,20 @@ class PCOUNTER:
     @property
     def out(self) -> tuple[bool, ...]:
         return self.register.out
+
+
+@dataclass(frozen=True)
+class ROM32K:
+    """32,768-register memory, each 16-bits. This is a primitive component."""
+
+    registers: tuple[tuple[bool, ...], ...]
+
+    def __post_init__(self) -> None:
+        assert all(
+            is_n_bit_vector(xs, n=16) for xs in self.registers
+        ), "`registers` must be a tuple of 16-tuples of `bool`s"
+        assert len(self.registers) == 2**15, "`registers` must be a 32,768-tuple"
+
+    def __call__(self, address: tuple[bool, ...]) -> tuple[bool, ...]:
+        register_idx = bool_tuple_to_int(address)
+        return self.registers[register_idx]
