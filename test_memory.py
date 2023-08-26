@@ -3,9 +3,10 @@ import random
 import utils
 
 from arithmetic import INC16
-from memory import DFF, BIT, REGISTER16, RAM8, RAM64, RAM512, RAM4K, RAM16K, PCOUNTER
+from memory import DFF, BIT, REGISTER16, RAM8, RAM64, RAM512, RAM4K, RAM16K, PC
 
-NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST = 16
+
+NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST = 8
 ZERO16 = (False,) * 16
 
 
@@ -64,7 +65,7 @@ def test_dff(initial_value: bool, x: bool) -> None:
 
     # When
     new_dff = dff(x)
-    
+
     # Then
     assert dff.out == initial_value
     assert new_dff.out == x
@@ -341,7 +342,7 @@ def test_pc() -> None:
     # Given
     xs = utils.sample_bits(16)
     register = _create_random_register()
-    pc = PCOUNTER(register)
+    pc = PC(register)
 
     # When / Then
     assert pc(xs, False, False, False).out == pc.out

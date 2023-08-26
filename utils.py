@@ -35,10 +35,10 @@ def is_n_bit_vector(xs: Any, n: int) -> bool:
     """Returns `True` iff `xs` is a tuple of bools of length `n`."""
     if not isinstance(xs, tuple):
         return False
-    
+
     if len(xs) != n:
         return False
-    
+
     if not all(isinstance(b, bool) for b in xs):
         return False
 
@@ -59,5 +59,27 @@ def to_int(bs: tuple[bool, ...]) -> int:
 
     # post-conditions
     assert isinstance(out, int), "output must be an integer"
+
+    return out
+
+
+def int_to_bit_vector(i: int, n: int) -> tuple[bool, ...]:
+    """Converts an integer into a tuple of boolean values."""
+    # pre-conditions
+    assert isinstance(i, int), "input must be an integer"
+    assert isinstance(n, int), "input must be an integer"
+    assert n >= 0, "input must be a non-negative integer"
+
+    if n < i.bit_length():
+        raise ValueError("input is too large to fit in `n` bits")
     
+    # body
+    binary = bin(i)
+    binary = binary[2:]  # remove the "0b" prefix
+    binary = binary.zfill(n)  # pad with leading zeros
+    out = tuple(bit == "1" for bit in binary)
+
+    # post-conditions
+    assert is_n_bit_vector(out, n), "output must be an `n`-bit tuple of bools"
+
     return out

@@ -386,8 +386,8 @@ class RAM16K:
 
 
 @dataclass(frozen=True)
-class PCOUNTER:
-    """A 16-bit counter with load, inc and reset control bits."""
+class PC:
+    """A 16-bit program counter with load, inc and reset control bits."""
 
     register: REGISTER16
 
@@ -402,7 +402,7 @@ class PCOUNTER:
         load: bool,
         inc: bool,
         reset: bool,
-    ) -> "PCOUNTER":
+    ) -> "PC":
         # pre-conditions
         assert is_n_bit_vector(xs, n=16), "`xs` must be a 16-tuple of `bool`s"
         assert isinstance(load, bool), "`load` must be a `bool`"
@@ -414,10 +414,10 @@ class PCOUNTER:
         b = MUX16(a, xs, load)
         c = MUX16(b, ZERO16, reset)
         new_register = self.register(c, True)
-        new_pcounter = PCOUNTER(new_register)
+        new_pcounter = PC(new_register)
 
         # post-conditions
-        assert isinstance(new_pcounter, PCOUNTER), "`new_pcounter` must be a `PCOUNTER`"
+        assert isinstance(new_pcounter, PC), "`new_pcounter` must be a `PCOUNTER`"
         assert isinstance(
             new_pcounter.register, REGISTER16
         ), "`new_pcounter.register` must be a `REGISTER16`"
