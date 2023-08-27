@@ -348,19 +348,19 @@ def is_valid_instruction(instruction: tuple[bool, ...]) -> bool:
 
 # hacking: how should the screen be rendered?
 
-import time
-import random
+# import time
+# import random
+import tkinter as tk
 
-root = tk.Tk()
-canvas = tk.Canvas(root, width=512, height=256)
-canvas.pack()
+# root = tk.Tk()
+# canvas = tk.Canvas(root, width=512, height=256)
+# canvas.pack()
 
-class TESTRAM8K:
-    def __init__(self):
-        # Fix: Each register should have 16 bits
-        self.state = tuple(tuple(random.choice([True, False]) for _ in range(16)) for _ in range(8_192))
+# class TESTRAM8K:
+#     def __init__(self):
+#         self.state = tuple(tuple(random.choice([True, False]) for _ in range(16)) for _ in range(8_192))
 
-def render_screen(root: tk.Tk, canvas: tk.Canvas, screen: "TESTRAM8K") -> None:
+def render_screen(root: tk.Tk, canvas: tk.Canvas, screen: "RAM8K") -> None:
     canvas.delete("all")
     
     row: int = 0
@@ -379,7 +379,7 @@ def render_screen(root: tk.Tk, canvas: tk.Canvas, screen: "TESTRAM8K") -> None:
     root.update_idletasks()
     root.update()
 
-while True:
-    dummy_ram8k = TESTRAM8K()
-    render_screen(root, canvas, dummy_ram8k)  # type: ignore
-    time.sleep(1.0)
+# while True:
+#     dummy_ram8k = TESTRAM8K()
+#     render_screen(root, canvas, dummy_ram8k)  # type: ignore
+#     time.sleep(1.0)

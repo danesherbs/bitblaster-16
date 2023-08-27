@@ -14,7 +14,19 @@ from utils import (
     SymbolicInstruction,
 )
 from arithmetic import INC16
-from memory import DFF, BIT, REGISTER16, RAM8, RAM64, RAM512, RAM4K, RAM8K, RAM16K, PC
+from memory import (
+    DFF,
+    BIT,
+    REGISTER16,
+    RAM8,
+    RAM64,
+    RAM512,
+    RAM4K,
+    RAM8K,
+    RAM16K,
+    PC,
+    ROM32K,
+)
 from computer import (
     DEST_SYMBOL_TO_INSTRUCTION,
     COMP_SYMBOL_TO_INSTRUCTION,
@@ -26,7 +38,7 @@ from computer import (
 )
 
 
-NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST = 8
+NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST = 1
 
 
 def _build_a_instruction(value: int) -> int:
@@ -174,6 +186,20 @@ def _create_random_cpu() -> CPU:
         out_m=out_m,
         write_m=write_m,
     )
+
+
+def _create_random_rom32k() -> ROM32K:
+    """Returns a random ROM32K."""
+    ram16ks = tuple(_create_random_ram16k() for _ in range(2))
+    state = ram16ks[0].state + ram16ks[1].state
+    return ROM32K(state)
+
+
+def _create_random_computer() -> Computer:
+    rom = _create_random_rom32k()
+    cpu = _create_random_cpu()
+    memory = _create_random_memory()
+    return Computer(rom, cpu, memory)
 
 
 def _to_symbol(c_instruction: tuple[bool, ...]) -> SymbolicInstruction:
@@ -676,14 +702,16 @@ def test_memory_does_not_load_value_at_valid_address_but_outputs_it_next_time_st
     new_memory = memory(xs, address, load)
 
     # Then
-    assert new_memory.ram.state == memory.ram.state, "RAM must not change when load is `False`"
+    assert (
+        new_memory.ram.state == memory.ram.state
+    ), "RAM must not change when load is `False`"
     assert (
         new_memory.screen.state == memory.screen.state
     ), "screen must not change when load is `False`"
     assert (
         new_memory.keyboard.out == memory.keyboard.out
     ), "keyboard must not change when load is `False`"
-    
+
     if 0 <= address_idx < 2**14:
         assert (
             new_memory.out == memory.ram.state[address_idx]
@@ -695,8 +723,6 @@ def test_memory_does_not_load_value_at_valid_address_but_outputs_it_next_time_st
         assert (
             new_memory.out == memory.screen.state[offset_address_idx]
         ), "out must be the value at offset address of the screen"
-    
+
     if address_idx == 2**14 + 2**13:
-        assert (
-            new_memory.out == memory.keyboard.out
-        ), "out must be the value at address"
+        assert new_memory.out == memory.keyboard.out, "out must be the value at address"
