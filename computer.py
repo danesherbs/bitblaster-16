@@ -344,3 +344,42 @@ def is_valid_instruction(instruction: tuple[bool, ...]) -> bool:
         return False
 
     return True
+
+
+# hacking: how should the screen be rendered?
+
+import time
+import random
+
+root = tk.Tk()
+canvas = tk.Canvas(root, width=512, height=256)
+canvas.pack()
+
+class TESTRAM8K:
+    def __init__(self):
+        # Fix: Each register should have 16 bits
+        self.state = tuple(tuple(random.choice([True, False]) for _ in range(16)) for _ in range(8_192))
+
+def render_screen(root: tk.Tk, canvas: tk.Canvas, screen: "TESTRAM8K") -> None:
+    canvas.delete("all")
+    
+    row: int = 0
+    col: int = 0
+    
+    for register in screen.state:
+        for bit in register:
+            color = "white" if bit else "black"
+            canvas.create_rectangle(col, row, col + 1, row + 1, fill=color, outline=color)
+            
+            col += 1
+            if col >= 512:
+                col = 0
+                row += 1
+
+    root.update_idletasks()
+    root.update()
+
+while True:
+    dummy_ram8k = TESTRAM8K()
+    render_screen(root, canvas, dummy_ram8k)  # type: ignore
+    time.sleep(1.0)
