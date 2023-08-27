@@ -95,32 +95,38 @@ def _create_random_register() -> REGISTER16:
 
 def _create_random_ram8() -> RAM8:
     registers = tuple(_create_random_register() for _ in range(8))
-    return RAM8(registers)
+    out = registers[0].out
+    return RAM8(registers, out)
 
 
 def _create_random_ram64() -> RAM64:
     ram8s = tuple(_create_random_ram8() for _ in range(8))
-    return RAM64(ram8s)
+    out = ram8s[0].out
+    return RAM64(ram8s, out)
 
 
 def _create_random_ram512() -> RAM512:
     ram64s = tuple(_create_random_ram64() for _ in range(8))
-    return RAM512(ram64s)
+    out = ram64s[0].out
+    return RAM512(ram64s, out)
 
 
 def _create_random_ram4k() -> RAM4K:
     ram512s = tuple(_create_random_ram512() for _ in range(8))
-    return RAM4K(ram512s)
+    out = ram512s[0].out
+    return RAM4K(ram512s, out)
 
 
 def _create_random_ram8k() -> RAM8K:
     ram4ks = tuple(_create_random_ram4k() for _ in range(2))
-    return RAM8K(ram4ks)
+    out = ram4ks[0].out
+    return RAM8K(ram4ks, out)
 
 
 def _create_random_ram16k() -> RAM16K:
     ram4ks = tuple(_create_random_ram4k() for _ in range(4))
-    return RAM16K(ram4ks)
+    out = ram4ks[0].out
+    return RAM16K(ram4ks, out)
 
 
 def _create_random_pc() -> PC:
@@ -607,23 +613,19 @@ def test_memory_loads_value_at_valid_address_and_returns_it_next_time_step(
     # Then
     if 0 <= address_idx < 2**14:
         assert (
-            new_memory.ram.out[address_idx] == xs
+            new_memory.ram.state[address_idx] == xs
         ), "memory must load value at address when load is asserted"
-
-        assert (
-            new_memory.out == memory.ram.out[address_idx]
-        ), "out must be the value at address"
 
     if 2**14 <= address_idx < 2**14 + 2**13:
         offset_address_idx = address_idx - 2**14
 
         assert (
-            new_memory.screen.out[offset_address_idx] == xs
+            new_memory.screen.state[offset_address_idx] == xs
         ), "screen must load value at address when load is asserted"
 
-        assert (
-            new_memory.out == memory.screen.out[offset_address_idx]
-        ), "out must be the value at address"
+    assert (
+        new_memory.out == xs
+    ), "out must return the value stored at the previous time step"
 
 
 @pytest.mark.parametrize(
@@ -674,22 +676,27 @@ def test_memory_does_not_load_value_at_valid_address_but_outputs_it_next_time_st
     new_memory = memory(xs, address, load)
 
     # Then
-    assert memory.ram == new_memory.ram, "RAM must not change when load is `False`"
+    assert new_memory.ram.state == memory.ram.state, "RAM must not change when load is `False`"
     assert (
-        memory.screen == new_memory.screen
+        new_memory.screen.state == memory.screen.state
     ), "screen must not change when load is `False`"
     assert (
-        memory.keyboard == new_memory.keyboard
+        new_memory.keyboard.out == memory.keyboard.out
     ), "keyboard must not change when load is `False`"
-
+    
     if 0 <= address_idx < 2**14:
         assert (
-            new_memory.out == memory.ram.out[address_idx]
-        ), "out must be the value at address"
+            new_memory.out == memory.ram.state[address_idx]
+        ), "out must be the value at address of the RAM"
 
     if 2**14 <= address_idx < 2**14 + 2**13:
         offset_address_idx = address_idx - 2**14
 
         assert (
-            new_memory.out == memory.screen.out[offset_address_idx]
+            new_memory.out == memory.screen.state[offset_address_idx]
+        ), "out must be the value at offset address of the screen"
+    
+    if address_idx == 2**14 + 2**13:
+        assert (
+            new_memory.out == memory.keyboard.out
         ), "out must be the value at address"

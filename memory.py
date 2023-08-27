@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from gates import MUX, MUX16, DMUX, DMUX4WAY, DMUX8WAY
+from gates import MUX, MUX16, MUX4WAY16, MUX8WAY16, DMUX, DMUX4WAY, DMUX8WAY
 from arithmetic import INC16
 from utils import is_n_bit_vector, to_int
 
@@ -109,6 +109,7 @@ class RAM8:
     """8-register memory, each 16-bits."""
 
     registers: tuple[REGISTER16, ...]
+    out: tuple[bool, ...]
 
     def __post_init__(self) -> None:
         assert all(
@@ -117,6 +118,7 @@ class RAM8:
         assert (
             len(self.registers) == 8
         ), "`registers` must be a 8-tuple of `REGISTER16`s"
+        assert is_n_bit_vector(self.out, n=16), "`out` must be a 16-tuple of `bool`s"
 
     def __call__(
         self,
@@ -132,7 +134,8 @@ class RAM8:
         # body
         load_bits = DMUX8WAY(load, address)
         new_registers = tuple(r(xs, load_bits[i]) for i, r in enumerate(self.registers))
-        new_ram8 = RAM8(new_registers)
+        new_out = MUX8WAY16(*[r.out for r in new_registers], sel=address)  # type: ignore
+        new_ram8 = RAM8(new_registers, new_out)
 
         # post-conditions
         assert isinstance(new_ram8, RAM8), "`new_ram8` must be a `RAM8`"
@@ -148,12 +151,12 @@ class RAM8:
             ), "new value must be stored when load=1"
 
         if not load:
-            assert new_ram8.out == self.out, "old value must be kept when load=0"
+            assert new_ram8.state == self.state, "old value must be kept when load=0"
 
         return new_ram8
 
     @property
-    def out(self) -> tuple[tuple[bool, ...], ...]:
+    def state(self) -> tuple[tuple[bool, ...], ...]:
         return tuple(r.out for r in self.registers)
 
 
@@ -162,12 +165,14 @@ class RAM64:
     """64-register memory, each 16-bits."""
 
     ram8s: tuple[RAM8, ...]
+    out: tuple[bool, ...]
 
     def __post_init__(self) -> None:
         assert all(
             isinstance(r, RAM8) for r in self.ram8s
         ), "`ram8s` must be a tuple of `RAM8`s"
         assert len(self.ram8s) == 8, "`ram8s` must be a 8-tuple of `RAM8`s"
+        assert is_n_bit_vector(self.out, n=16), "`out` must be a 16-tuple of `bool`s"
 
     def __call__(
         self,
@@ -185,7 +190,8 @@ class RAM64:
         new_ram8s = tuple(
             r(xs, load_bits[i], address[3:]) for i, r in enumerate(self.ram8s)
         )
-        new_ram64 = RAM64(new_ram8s)
+        new_out = MUX8WAY16(*[r.out for r in new_ram8s], sel=address[:3])  # type: ignore
+        new_ram64 = RAM64(new_ram8s, new_out)
 
         # post-conditions
         assert isinstance(new_ram64, RAM64), "`new_ram64` must be a `RAM64`"
@@ -196,20 +202,27 @@ class RAM64:
         if load:
             address_idx = to_int(address)
             assert (
-                new_ram64.out[address_idx] == xs
+                new_ram64.state[address_idx] == xs
             ), "new value must be stored when load=1"
+            assert (
+                new_ram64.out == xs
+            ), "new value must be returned as `out` when load=1"
 
         if not load:
-            assert self.out == new_ram64.out, "old value must be kept when load=0"
+            address_idx = to_int(address)
+            assert self.state == new_ram64.state, "old value must be kept when load=0"
+            assert (
+                new_ram64.out == self.state[address_idx]
+            ), "old value must be returned as `out` when load=0"
 
         return new_ram64
 
     @property
-    def out(self) -> tuple[tuple[bool, ...], ...]:
+    def state(self) -> tuple[tuple[bool, ...], ...]:
         output: tuple[tuple[bool, ...], ...] = ()
 
         for ram8 in self.ram8s:
-            output += ram8.out
+            output += ram8.state
 
         return output
 
@@ -219,12 +232,14 @@ class RAM512:
     """512-register memory, each 16-bits."""
 
     ram64s: tuple[RAM64, ...]
+    out: tuple[bool, ...]
 
     def __post_init__(self) -> None:
         assert all(
             isinstance(r, RAM64) for r in self.ram64s
         ), "`ram64s` must be a tuple of `RAM64`s"
         assert len(self.ram64s) == 8, "`ram64s` must be a 8-tuple of `RAM8`s"
+        assert is_n_bit_vector(self.out, n=16), "`out` must be a 16-tuple of `bool`s"
 
     def __call__(
         self,
@@ -242,31 +257,39 @@ class RAM512:
         new_ram64s = tuple(
             r(xs, load_bits[i], address[3:]) for i, r in enumerate(self.ram64s)
         )
-        new_ram512 = RAM512(new_ram64s)
+        new_out = MUX8WAY16(*[r.out for r in new_ram64s], sel=address[:3])  # type: ignore
+        new_ram512 = RAM512(new_ram64s, new_out)
 
         # post-conditions
         assert isinstance(new_ram512, RAM512), "`new_ram512` must be a `RAM512`"
         assert all(
             isinstance(r, RAM64) for r in new_ram512.ram64s
         ), "`new_ram512.ram64s` must be an 8-tuple of `RAM64`s"
+        
+        address_idx = to_int(address)
 
         if load:
-            address_idx = to_int(address)
             assert (
-                new_ram512.out[address_idx] == xs
+                new_ram512.state[address_idx] == xs
             ), "new value must be stored when load=1"
+            assert (
+                new_ram512.out == xs
+            ), "new value must be returned as `out` when load=1"
 
         if not load:
-            assert self.out == new_ram512.out, "old value must be kept when load=0"
+            assert new_ram512.state == self.state, "old value must be kept when load=0"
+            assert (
+                new_ram512.out == self.state[address_idx]
+            ), "out must be value of RAM at `address` when load=0"
 
         return new_ram512
 
     @property
-    def out(self) -> tuple[tuple[bool, ...], ...]:
+    def state(self) -> tuple[tuple[bool, ...], ...]:
         output: tuple[tuple[bool, ...], ...] = ()
 
         for ram64 in self.ram64s:
-            output += ram64.out
+            output += ram64.state
 
         return output
 
@@ -276,12 +299,14 @@ class RAM4K:
     """4,096-register memory, each 16-bits."""
 
     ram512s: tuple[RAM512, ...]
+    out: tuple[bool, ...]
 
     def __post_init__(self) -> None:
         assert all(
             isinstance(r, RAM512) for r in self.ram512s
         ), "`ram512s` must be a tuple of `RAM512`s"
         assert len(self.ram512s) == 8, "`ram512s` must be a 8-tuple of `RAM8`s"
+        assert is_n_bit_vector(self.out, n=16), "`out` must be a 16-tuple of `bool`s"
 
     def __call__(
         self,
@@ -299,31 +324,39 @@ class RAM4K:
         new_ram512s = tuple(
             r(xs, load_bits[i], address[3:]) for i, r in enumerate(self.ram512s)
         )
-        new_ram4k = RAM4K(new_ram512s)
+        new_out = MUX8WAY16(*[r.out for r in new_ram512s], sel=address[:3])  # type: ignore
+        new_ram4k = RAM4K(new_ram512s, new_out)
 
         # post-conditions
         assert isinstance(new_ram4k, RAM4K), "`new_ram4k` must be a `RAM4K`"
         assert all(
             isinstance(r, RAM512) for r in new_ram4k.ram512s
         ), "`new_ram4k.ram512s` must be an 8-tuple of `RAM512`s"
+        
+        address_idx = to_int(address)
 
         if load:
-            address_idx = to_int(address)
             assert (
-                new_ram4k.out[address_idx] == xs
+                new_ram4k.state[address_idx] == xs
             ), "new value must be stored when load=1"
+            assert (
+                new_ram4k.out == xs
+            ), "new value must be returned as `out` when load=1"
 
         if not load:
-            assert self.out == new_ram4k.out, "old value must be kept when load=0"
+            assert self.state == new_ram4k.state, "old value must be kept when load=0"
+            assert (
+                new_ram4k.out == self.state[address_idx]
+            ), "out must be value of RAM at `address` when load=0"
 
         return new_ram4k
 
     @property
-    def out(self) -> tuple[tuple[bool, ...], ...]:
+    def state(self) -> tuple[tuple[bool, ...], ...]:
         output: tuple[tuple[bool, ...], ...] = ()
 
         for ram512 in self.ram512s:
-            output += ram512.out
+            output += ram512.state
 
         return output
 
@@ -334,13 +367,15 @@ class RAM8K:
     """8,192-register memory, each 16-bits."""
 
     ram4ks: tuple[RAM4K, ...]
+    out: tuple[bool, ...]
 
     def __post_init__(self) -> None:
         assert all(
             isinstance(r, RAM4K) for r in self.ram4ks
         ), "`ram4ks` must be a tuple of `RAM4K`s"
         assert len(self.ram4ks) == 2, "`ram4ks` must be a 2-tuple of `RAM4K`s"
-    
+        assert is_n_bit_vector(self.out, n=16), "`out` must be a 16-tuple of `bool`s"
+
     def __call__(
         self,
         xs: tuple[bool, ...],
@@ -357,7 +392,12 @@ class RAM8K:
         new_ram4ks = tuple(
             r(xs, load_bits[i], address[1:]) for i, r in enumerate(self.ram4ks)
         )
-        new_ram8k = RAM8K(new_ram4ks)
+        new_out = MUX16(
+            new_ram4ks[0].out,
+            new_ram4ks[1].out,
+            address[0],
+        )
+        new_ram8k = RAM8K(new_ram4ks, new_out)
 
         # post-conditions
         assert isinstance(new_ram8k, RAM8K), "`new_ram8k` must be a `RAM8K`"
@@ -365,23 +405,30 @@ class RAM8K:
             isinstance(r, RAM4K) for r in new_ram8k.ram4ks
         ), "`new_ram8k.ram4ks` must be an 2-tuple of `RAM4K`s"
 
+        address_idx = to_int(address)
+
         if load:
-            address_idx = to_int(address)
             assert (
-                new_ram8k.out[address_idx] == xs
+                new_ram8k.state[address_idx] == xs
             ), "new value must be stored when load=1"
+            assert (
+                new_ram8k.out == xs
+            ), "new value must be returned as `out` when load=1"
 
         if not load:
-            assert self.out == new_ram8k.out, "old value must be kept when load=0"
+            assert self.state == new_ram8k.state, "old value must be kept when load=0"
+            assert (
+                new_ram8k.out == self.state[address_idx]
+            ), "out must be value of RAM at `address` when load=0"
 
         return new_ram8k
 
     @property
-    def out(self) -> tuple[tuple[bool, ...], ...]:
+    def state(self) -> tuple[tuple[bool, ...], ...]:
         output: tuple[tuple[bool, ...], ...] = ()
 
         for ram4k in self.ram4ks:
-            output += ram4k.out
+            output += ram4k.state
 
         return output
 
@@ -391,12 +438,14 @@ class RAM16K:
     """16,384-register memory, each 16-bits."""
 
     ram4ks: tuple[RAM4K, ...]
+    out: tuple[bool, ...]
 
     def __post_init__(self) -> None:
         assert all(
             isinstance(r, RAM4K) for r in self.ram4ks
         ), "`ram4ks` must be a tuple of `RAM4K`s"
         assert len(self.ram4ks) == 4, "`ram4ks` must be a 4-tuple of `RAM4K`s"
+        assert is_n_bit_vector(self.out, n=16), "`out` must be a 16-tuple of `bool`s"
 
     def __call__(
         self,
@@ -414,31 +463,42 @@ class RAM16K:
         new_ram4ks = tuple(
             r(xs, load_bits[i], address[2:]) for i, r in enumerate(self.ram4ks)
         )
-        new_ram16k = RAM16K(new_ram4ks)
+        new_out = MUX4WAY16(  # type: ignore
+            *[r.out for r in new_ram4ks],
+            sel=address[:2],
+        ) 
+        new_ram16k = RAM16K(new_ram4ks, new_out)
 
         # post-conditions
         assert isinstance(new_ram16k, RAM16K), "`new_ram16k` must be a `RAM16K`"
         assert all(
             isinstance(r, RAM4K) for r in new_ram16k.ram4ks
         ), "`new_ram16k.ram4ks` must be an 4-tuple of `RAM4K`s"
+        
+        address_idx = to_int(address)
 
         if load:
-            address_idx = to_int(address)
             assert (
-                new_ram16k.out[address_idx] == xs
+                new_ram16k.state[address_idx] == xs
             ), "new value must be stored when load=1"
+            assert (
+                new_ram16k.out == xs
+            ), "new value must be returned as `out` when load=1"
 
         if not load:
-            assert self.out == new_ram16k.out, "old value must be kept when load=0"
+            assert self.state == new_ram16k.state, "old value must be kept when load=0"
+            assert (
+                new_ram16k.out == self.state[address_idx]
+            ), "out must be value of RAM at `address` when load=0"
 
         return new_ram16k
 
     @property
-    def out(self) -> tuple[tuple[bool, ...], ...]:
+    def state(self) -> tuple[tuple[bool, ...], ...]:
         output: tuple[tuple[bool, ...], ...] = ()
 
         for ram4k in self.ram4ks:
-            output += ram4k.out
+            output += ram4k.state
 
         return output
 
