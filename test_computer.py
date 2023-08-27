@@ -146,6 +146,12 @@ def _create_random_pc() -> PC:
     return PC(register)
 
 
+def _create_zeroed_pc() -> PC:
+    bits = tuple(BIT(DFF(False)) for _ in range(16))
+    register = REGISTER16(bits)
+    return PC(register)
+
+
 def _create_random_memory() -> Memory:
     """Returns a random memory."""
     ram16k = _create_random_ram16k()
@@ -170,7 +176,7 @@ def _create_random_invalid_memory_address() -> tuple[bool, ...]:
 def _create_random_cpu() -> CPU:
     a_register = _create_random_register()
     d_register = _create_random_register()
-    pc = _create_random_pc()
+    pc = _create_zeroed_pc()
 
     out_m = ZERO16
     write_m = False
