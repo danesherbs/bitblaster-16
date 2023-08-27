@@ -9,7 +9,6 @@ from utils import (
     to_int,
 )
 
-# from memory import RAM8K
 
 # Symbol to machine code lookup tables for C-instructions
 DEST_SYMBOL_TO_INSTRUCTION = {
@@ -264,13 +263,13 @@ class Memory:
         )
 
         new_keyboard = self.keyboard
-        
+
         new_out = MUX16(
             xs=new_ram.out,
             ys=MUX16(
                 xs=new_screen.out,
                 ys=new_keyboard.out,
-                sel=address[1],   
+                sel=address[1],
             ),
             sel=address[0],
         )
@@ -286,6 +285,11 @@ class Memory:
         assert isinstance(new_memory, Memory), "output must be of type `Memory`"
 
         return new_memory
+
+    @property
+    def state(self) -> tuple[tuple[bool, ...], ...]:
+        """The entire state of the main memory."""
+        return self.ram.state + self.screen.state + (self.keyboard.out,)
 
 
 @dataclass(frozen=True)
