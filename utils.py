@@ -126,3 +126,5 @@ def is_positive(xs: tuple[bool, ...]) -> bool:
     assert isinstance(out, bool), "output must be a bool"
 
     return out
+
+

@@ -2,10 +2,66 @@ import random
 
 from dataclasses import dataclass, field
 from typing import Optional
-from utils import is_n_bit_vector, sample_bits, is_non_negative, ZERO16
+from utils import is_n_bit_vector, sample_bits, is_non_negative, ZERO16, to_int
 from gates import AND, OR, OR16, NOT, MUX16
 from arithmetic import ALU
 from memory import REGISTER16, PC
+
+# Symbol to machine code lookup tables for C-instructions
+DEST = {
+    "null": 0b000,
+    "M": 0b001,
+    "D": 0b010,
+    "MD": 0b011,
+    "A": 0b100,
+    "AM": 0b101,
+    "AD": 0b110,
+    "AMD": 0b111,
+}
+
+COMP = {
+    # a = 0
+    "0": 0b0101010,
+    "1": 0b0111111,
+    "-1": 0b0111010,
+    "D": 0b0001100,
+    "A": 0b0110000,
+    "!D": 0b0001101,
+    "!A": 0b0110001,
+    "-D": 0b0001111,
+    "-A": 0b0110011,
+    "D+1": 0b0011111,
+    "A+1": 0b0110111,
+    "D-1": 0b0001110,
+    "A-1": 0b0110010,
+    "D+A": 0b0000010,
+    "D-A": 0b0010011,
+    "A-D": 0b0000111,
+    "D&A": 0b0000000,
+    "D|A": 0b0010101,
+    # a = 1
+    "M": 0b1110000,
+    "!M": 0b1110001,
+    "-M": 0b1110011,
+    "M+1": 0b1110111,
+    "M-1": 0b1110010,
+    "D+M": 0b1000010,
+    "D-M": 0b1010011,
+    "M-D": 0b1000111,
+    "D&M": 0b1000000,
+    "D|M": 0b1010101,
+}
+
+JUMP = {
+    "null": 0b000,
+    "JGT": 0b001,
+    "JEQ": 0b010,
+    "JGE": 0b011,
+    "JLT": 0b100,
+    "JNE": 0b101,
+    "JLE": 0b110,
+    "JMP": 0b111,
+}
 
 
 @dataclass(frozen=True)
@@ -20,8 +76,8 @@ class CPU:
     # outputs (initially None to allow for random initialization)
     out_m: Optional[tuple[bool, ...]] = None
     write_m: Optional[bool] = None
-    zr: Optional[bool] = None
-    ng: Optional[bool] = None
+    zr: Optional[bool] = None  # intermediate output of ALU
+    ng: Optional[bool] = None  # intermediate output of ALU
 
     def __post_init__(self) -> None:
         if self.out_m is None:
@@ -46,6 +102,10 @@ class CPU:
         assert is_n_bit_vector(self.out_m, n=16), "out_m must be a 16-bit tuple"
         assert isinstance(self.zr, bool), "zr must be a bool"
         assert isinstance(self.ng, bool), "ng must be a bool"
+
+        assert is_supported_instruction(
+            instruction
+        ), "instruction must be a valid instruction"
 
         # body
         new_a_register_value = MUX16(
@@ -166,3 +226,27 @@ class Computer:
     """The Hack computer, including the CPU, ROM and RAM. When reset is zero, the program stored in the ROM is executed. When reset is one, the execution of the program restarts."""
 
     pass
+
+
+def is_supported_instruction(instruction: tuple[bool, ...]) -> bool:
+    """Returns `True` iff `instruction` is a valid 16-bit instruction."""
+    if not is_n_bit_vector(instruction, n=16):
+        return False
+
+    if instruction[0] == False:
+        return True
+
+    comp = instruction[3:10]
+    dest = instruction[10:13]
+    jump = instruction[13:16]
+
+    if to_int(comp) not in COMP.values():
+        return False
+
+    if to_int(dest) not in DEST.values():
+        return False
+
+    if to_int(jump) not in JUMP.values():
+        return False
+
+    return True

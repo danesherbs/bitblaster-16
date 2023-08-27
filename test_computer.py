@@ -15,66 +15,10 @@ from utils import (
 )
 from arithmetic import INC16
 from memory import DFF, BIT, REGISTER16, PC
-from computer import CPU, Memory, Computer
+from computer import CPU, Memory, Computer, DEST, COMP, JUMP, is_supported_instruction
 
 
 NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST = 128
-
-# Symbol to machine code lookup tables for C-instructions
-DEST = {
-    "null": 0b000,
-    "M": 0b001,
-    "D": 0b010,
-    "MD": 0b011,
-    "A": 0b100,
-    "AM": 0b101,
-    "AD": 0b110,
-    "AMD": 0b111,
-}
-
-COMP = {
-    # a = 0
-    "0": 0b0101010,
-    "1": 0b0111111,
-    "-1": 0b0111010,
-    "D": 0b0001100,
-    "A": 0b0110000,
-    "!D": 0b0001101,
-    "!A": 0b0110001,
-    "-D": 0b0001111,
-    "-A": 0b0110011,
-    "D+1": 0b0011111,
-    "A+1": 0b0110111,
-    "D-1": 0b0001110,
-    "A-1": 0b0110010,
-    "D+A": 0b0000010,
-    "D-A": 0b0010011,
-    "A-D": 0b0000111,
-    "D&A": 0b0000000,
-    "D|A": 0b0010101,
-    # a = 1
-    "M": 0b1110000,
-    "!M": 0b1110001,
-    "-M": 0b1110011,
-    "M+1": 0b1110111,
-    "M-1": 0b1110010,
-    "D+M": 0b1000010,
-    "D-M": 0b1010011,
-    "M-D": 0b1000111,
-    "D&M": 0b1000000,
-    "D|M": 0b1010101,
-}
-
-JUMP = {
-    "null": 0b000,
-    "JGT": 0b001,
-    "JEQ": 0b010,
-    "JGE": 0b011,
-    "JLT": 0b100,
-    "JNE": 0b101,
-    "JLE": 0b110,
-    "JMP": 0b111,
-}
 
 
 def _build_a_instruction(value: int) -> int:
@@ -183,6 +127,30 @@ def _to_symbol(c_instruction: tuple[bool, ...]) -> SymbolicInstruction:
     assert isinstance(out, SymbolicInstruction), "output must be a SymbolicInstruction"
 
     return out
+
+
+def _create_valid_instruction() -> tuple[bool, ...]:
+    """Returns a random 16-bit instruction."""
+    return random.choice(
+        [
+            _create_random_a_instruction(),
+            random.choice(list(_get_next_c_instruction())),
+        ]
+    )
+
+
+def _create_invalid_instruction() -> tuple[bool, ...]:
+    """Returns a random 16-bit instruction."""
+    instruction = (True,) + sample_bits(15)
+
+    while is_supported_instruction(instruction):
+        instruction = (True,) + sample_bits(15)
+
+    # post-conditions
+    assert is_n_bit_vector(instruction, n=16), "instruction must be 16-bit"
+    assert not is_supported_instruction(instruction), "instruction must be invalid"
+
+    return instruction
 
 
 @pytest.mark.parametrize(
@@ -489,11 +457,51 @@ def test_cpu_runs_c_instructions(
         ), "PC must jump to `A` when jump is an unconditional `JMP`"
 
 
-@pytest.mark.skip(reason="TODO: yet to be implemented")
-def test_cpu_throws_assertion_error_when_given_invalid_instruction() -> None:
-    pass
+@pytest.mark.parametrize(
+    "cpu, invalid_instruction, in_m, reset",
+    [
+        (
+            _create_random_cpu(),
+            _create_invalid_instruction(),
+            sample_bits(16),
+            True,
+        )
+        for _ in range(NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST)
+    ],
+)
+def test_cpu_throws_assertion_error_when_given_invalid_instruction(
+    cpu: CPU,
+    invalid_instruction: tuple[bool, ...],
+    in_m: tuple[bool, ...],
+    reset: bool,
+) -> None:
+    # When / Then
+    with pytest.raises(AssertionError):
+        cpu(invalid_instruction, in_m, reset)
 
 
-@pytest.mark.skip(reason="TODO: yet to be implemented")
-def test_program_counter_is_reset_when_reset_control_bit_is_asserted() -> None:
-    pass
+@pytest.mark.parametrize(
+    "cpu, instruction, in_m, reset",
+    [
+        (
+            _create_random_cpu(),
+            _create_valid_instruction(),
+            sample_bits(16),
+            True,
+        )
+        for _ in range(NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST)
+    ],
+)
+def test_program_counter_is_reset_when_reset_control_bit_is_asserted(
+    cpu: CPU,
+    instruction: tuple[bool, ...],
+    in_m: tuple[bool, ...],
+    reset: bool,
+) -> None:
+    # When
+    new_cpu = cpu(instruction, in_m, reset)
+
+    # Then
+    assert (
+        new_cpu.pc.out == ZERO16
+    ), "PC must be reset to `0` when reset control bit is asserted"
