@@ -361,7 +361,6 @@ class RAM4K:
         return output
 
 
-# now write one for RAM8K
 @dataclass(frozen=True)
 class RAM8K:
     """8,192-register memory, each 16-bits."""
