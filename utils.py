@@ -128,3 +128,16 @@ def is_positive(xs: tuple[bool, ...]) -> bool:
     return out
 
 
+def is_negative(xs: tuple[bool, ...]) -> bool:
+    """Returns `True` iff `xs` represents a negative integer."""
+    # pre-conditions
+    assert is_n_bit_vector(xs, n=16), "`xs` must be a 16-bit tuple of bools"
+
+    # body
+    out = xs[0] and any(xs[1:])
+
+    # post-conditions
+    assert isinstance(out, bool), "output must be a bool"
+
+    return out
+

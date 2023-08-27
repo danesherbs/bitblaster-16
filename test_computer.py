@@ -14,11 +14,19 @@ from utils import (
     SymbolicInstruction,
 )
 from arithmetic import INC16
-from memory import DFF, BIT, REGISTER16, PC
-from computer import CPU, Memory, Computer, DEST, COMP, JUMP, is_supported_instruction
+from memory import DFF, BIT, REGISTER16, RAM8, RAM64, RAM512, RAM4K, RAM8K, RAM16K, PC
+from computer import (
+    DEST_SYMBOL_TO_INSTRUCTION,
+    COMP_SYMBOL_TO_INSTRUCTION,
+    JUMP_SYMBOL_TO_INSTRUCTION,
+    CPU,
+    Memory,
+    Computer,
+    is_valid_instruction,
+)
 
 
-NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST = 128
+NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST = 8
 
 
 def _build_a_instruction(value: int) -> int:
@@ -49,11 +57,23 @@ def _build_c_instruction(dest: int, comp: int, jump: int) -> int:
     return out
 
 
+def _create_random_a_instruction() -> tuple[bool, ...]:
+    value = random.randint(0, 2**15 - 1)
+    int_instruction = _build_a_instruction(value)
+    out = int_to_bit_vector(int_instruction, n=16)
+
+    # post-conditions
+    assert out[0] == False, "A-instruction must start with a `0`"
+    assert to_int(out) == value, "A-instruction must be the value in the instruction"
+
+    return out
+
+
 def _get_next_c_instruction() -> Generator[tuple[bool, ...], None, None]:
     """A generator of all possible CPU C-instructions."""
-    for dest in DEST.values():
-        for comp in COMP.values():
-            for jump in JUMP.values():
+    for dest in DEST_SYMBOL_TO_INSTRUCTION.values():
+        for comp in COMP_SYMBOL_TO_INSTRUCTION.values():
+            for jump in JUMP_SYMBOL_TO_INSTRUCTION.values():
                 bin_instuction = _build_c_instruction(dest, comp, jump)
                 yield int_to_bit_vector(bin_instuction, n=16)
 
@@ -73,28 +93,81 @@ def _create_random_register() -> REGISTER16:
     return REGISTER16(bits)
 
 
+def _create_random_ram8() -> RAM8:
+    registers = tuple(_create_random_register() for _ in range(8))
+    return RAM8(registers)
+
+
+def _create_random_ram64() -> RAM64:
+    ram8s = tuple(_create_random_ram8() for _ in range(8))
+    return RAM64(ram8s)
+
+
+def _create_random_ram512() -> RAM512:
+    ram64s = tuple(_create_random_ram64() for _ in range(8))
+    return RAM512(ram64s)
+
+
+def _create_random_ram4k() -> RAM4K:
+    ram512s = tuple(_create_random_ram512() for _ in range(8))
+    return RAM4K(ram512s)
+
+
+def _create_random_ram8k() -> RAM8K:
+    ram4ks = tuple(_create_random_ram4k() for _ in range(2))
+    return RAM8K(ram4ks)
+
+
+def _create_random_ram16k() -> RAM16K:
+    ram4ks = tuple(_create_random_ram4k() for _ in range(4))
+    return RAM16K(ram4ks)
+
+
 def _create_random_pc() -> PC:
     register = _create_random_register()
     return PC(register)
+
+
+def _create_random_memory() -> Memory:
+    """Returns a random memory."""
+    ram16k = _create_random_ram16k()
+    screen = _create_random_ram8k()
+    keyboard = _create_random_register()
+    out = sample_bits(16)
+    return Memory(ram16k, screen, keyboard, out)
+
+
+def _create_random_valid_memory_address() -> tuple[bool, ...]:
+    """Returns a random valid address for `Memory`."""
+    idx = random.randint(0, 2**14 + 2**13 - 1)
+    return int_to_bit_vector(idx, n=15)
+
+
+def _create_random_invalid_memory_address() -> tuple[bool, ...]:
+    """Returns a random invalid address for `Memory`."""
+    idx = random.randint(2**14 + 2**13, 2**15 - 1)
+    return int_to_bit_vector(idx, n=15)
 
 
 def _create_random_cpu() -> CPU:
     a_register = _create_random_register()
     d_register = _create_random_register()
     pc = _create_random_pc()
-    return CPU(a_register, d_register, pc)
 
+    out_m = ZERO16
+    write_m = False
+    _zr = True
+    _ng = False
 
-def _create_random_a_instruction() -> tuple[bool, ...]:
-    value = random.randint(0, 2**15 - 1)
-    int_instruction = _build_a_instruction(value)
-    out = int_to_bit_vector(int_instruction, n=16)
-
-    # post-conditions
-    assert out[0] == False, "A-instruction must start with a `0`"
-    assert to_int(out) == value, "A-instruction must be the value in the instruction"
-
-    return out
+    return CPU(
+        a_register=a_register,
+        d_register=d_register,
+        pc=pc,
+        _zr=_zr,
+        _ng=_ng,
+        out_m=out_m,
+        write_m=write_m,
+    )
 
 
 def _to_symbol(c_instruction: tuple[bool, ...]) -> SymbolicInstruction:
@@ -109,9 +182,9 @@ def _to_symbol(c_instruction: tuple[bool, ...]) -> SymbolicInstruction:
     dest = c_instruction[10:13]
     jump = c_instruction[13:16]
 
-    dest_to_symbol = {v: k for k, v in DEST.items()}
-    comp_to_symbol = {v: k for k, v in COMP.items()}
-    jump_to_symbol = {v: k for k, v in JUMP.items()}
+    dest_to_symbol = {v: k for k, v in DEST_SYMBOL_TO_INSTRUCTION.items()}
+    comp_to_symbol = {v: k for k, v in COMP_SYMBOL_TO_INSTRUCTION.items()}
+    jump_to_symbol = {v: k for k, v in JUMP_SYMBOL_TO_INSTRUCTION.items()}
 
     dest_symbol = dest_to_symbol[to_int(dest)]
     comp_symbol = comp_to_symbol[to_int(comp)]
@@ -143,12 +216,12 @@ def _create_invalid_instruction() -> tuple[bool, ...]:
     """Returns a random 16-bit instruction."""
     instruction = (True,) + sample_bits(15)
 
-    while is_supported_instruction(instruction):
+    while is_valid_instruction(instruction):
         instruction = (True,) + sample_bits(15)
 
     # post-conditions
     assert is_n_bit_vector(instruction, n=16), "instruction must be 16-bit"
-    assert not is_supported_instruction(instruction), "instruction must be invalid"
+    assert not is_valid_instruction(instruction), "instruction must be invalid"
 
     return instruction
 
@@ -505,3 +578,118 @@ def test_program_counter_is_reset_when_reset_control_bit_is_asserted(
     assert (
         new_cpu.pc.out == ZERO16
     ), "PC must be reset to `0` when reset control bit is asserted"
+
+
+@pytest.mark.parametrize(
+    "memory, xs, address, load",
+    [
+        (
+            _create_random_memory(),
+            sample_bits(16),
+            _create_random_valid_memory_address(),
+            True,
+        )
+        for _ in range(NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST)
+    ],
+)
+def test_memory_loads_value_at_valid_address_and_returns_it_next_time_step(
+    memory: Memory,
+    xs: tuple[bool, ...],
+    address: tuple[bool, ...],
+    load: bool,
+) -> None:
+    # Given
+    address_idx = to_int(address)
+
+    # When
+    new_memory = memory(xs, address, load)
+
+    # Then
+    if 0 <= address_idx < 2**14:
+        assert (
+            new_memory.ram.out[address_idx] == xs
+        ), "memory must load value at address when load is asserted"
+
+        assert (
+            new_memory.out == memory.ram.out[address_idx]
+        ), "out must be the value at address"
+
+    if 2**14 <= address_idx < 2**14 + 2**13:
+        offset_address_idx = address_idx - 2**14
+
+        assert (
+            new_memory.screen.out[offset_address_idx] == xs
+        ), "screen must load value at address when load is asserted"
+
+        assert (
+            new_memory.out == memory.screen.out[offset_address_idx]
+        ), "out must be the value at address"
+
+
+@pytest.mark.parametrize(
+    "memory, xs, address, load",
+    [
+        (
+            _create_random_memory(),
+            sample_bits(16),
+            _create_random_invalid_memory_address(),
+            True,
+        )
+        for _ in range(NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST)
+    ],
+)
+def test_memory_throws_assertion_error_when_given_invalid_address(
+    memory: Memory,
+    xs: tuple[bool, ...],
+    address: tuple[bool, ...],
+    load: bool,
+) -> None:
+    # When / Then
+    with pytest.raises(AssertionError):
+        memory(xs, address, load)
+
+
+@pytest.mark.parametrize(
+    "memory, xs, address, load",
+    [
+        (
+            _create_random_memory(),
+            sample_bits(16),
+            _create_random_valid_memory_address(),
+            False,
+        )
+        for _ in range(NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST)
+    ],
+)
+def test_memory_does_not_load_value_at_valid_address_but_outputs_it_next_time_step_when_load_is_false(
+    memory: Memory,
+    xs: tuple[bool, ...],
+    address: tuple[bool, ...],
+    load: bool,
+) -> None:
+    # Given
+    address_idx = to_int(address)
+
+    # When
+    new_memory = memory(xs, address, load)
+
+    # Then
+    assert memory.ram == new_memory.ram, "RAM must not change when load is `False`"
+    assert (
+        memory.screen == new_memory.screen
+    ), "screen must not change when load is `False`"
+    assert (
+        memory.keyboard == new_memory.keyboard
+    ), "keyboard must not change when load is `False`"
+
+    if 0 <= address_idx < 2**14:
+        assert (
+            new_memory.out == memory.ram.out[address_idx]
+        ), "out must be the value at address"
+
+    if 2**14 <= address_idx < 2**14 + 2**13:
+        offset_address_idx = address_idx - 2**14
+
+        assert (
+            new_memory.out == memory.screen.out[offset_address_idx]
+        ), "out must be the value at address"

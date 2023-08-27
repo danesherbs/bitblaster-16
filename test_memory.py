@@ -3,7 +3,7 @@ import random
 import utils
 
 from arithmetic import INC16
-from memory import DFF, BIT, REGISTER16, RAM8, RAM64, RAM512, RAM4K, RAM16K, PC
+from memory import DFF, BIT, REGISTER16, RAM8, RAM64, RAM512, RAM4K, RAM8K, RAM16K, PC
 
 
 NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST = 8
@@ -43,6 +43,11 @@ def _create_random_ram512() -> RAM512:
 def _create_random_ram4k() -> RAM4K:
     ram512s = tuple(_create_random_ram512() for _ in range(8))
     return RAM4K(ram512s)
+
+
+def _create_random_ram8k() -> RAM8K:
+    ram4ks = tuple(_create_random_ram4k() for _ in range(2))
+    return RAM8K(ram4ks)
 
 
 def _create_random_ram16k() -> RAM16K:
@@ -297,6 +302,43 @@ def test_ram4k(
             continue  # skip the address index
 
         assert new_out[i] == old_out[i], f"register at index {i} should not change"
+
+
+@pytest.mark.parametrize(
+    "ram8k, xs, load, address",
+    [
+        (
+            _create_random_ram8k(),
+            utils.sample_bits(16),
+            random.choice([True, False]),
+            utils.sample_bits(13),
+        )
+        for _ in range(NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST)
+    ],
+)
+def test_ram8k(
+    ram8k: RAM8K,
+    xs: tuple[bool, ...],
+    load: bool,
+    address: tuple[bool, ...],
+) -> None:
+    # When
+    new_ram8k = ram8k(xs, load, address)
+
+    # Then
+    address_idx = utils.to_int(address)
+    old_out = ram8k.out
+    new_out = new_ram8k.out
+
+    if load:
+        assert new_out[address_idx] == xs, "new value must be stored when load=1"
+
+    if not load:
+        assert old_out == new_out, "old value must be kept when load=0"
+
+    for i in range(2**13):
+        if i == address_idx:
+            continue
 
 
 @pytest.mark.parametrize(

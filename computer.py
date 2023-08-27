@@ -1,14 +1,18 @@
-import random
-
-from dataclasses import dataclass, field
-from typing import Optional
-from utils import is_n_bit_vector, sample_bits, is_non_negative, ZERO16, to_int
-from gates import AND, OR, OR16, NOT, MUX16
+from dataclasses import dataclass
+from gates import AND, OR, NOT, MUX16, DMUX
 from arithmetic import ALU
-from memory import REGISTER16, PC
+from memory import REGISTER16, RAM8K, RAM16K, ROM32K, PC
+from utils import (
+    ZERO16,
+    is_n_bit_vector,
+    is_negative,
+    to_int,
+)
+
+# from memory import RAM8K
 
 # Symbol to machine code lookup tables for C-instructions
-DEST = {
+DEST_SYMBOL_TO_INSTRUCTION = {
     "null": 0b000,
     "M": 0b001,
     "D": 0b010,
@@ -19,7 +23,7 @@ DEST = {
     "AMD": 0b111,
 }
 
-COMP = {
+COMP_SYMBOL_TO_INSTRUCTION = {
     # a = 0
     "0": 0b0101010,
     "1": 0b0111111,
@@ -52,7 +56,7 @@ COMP = {
     "D|M": 0b1010101,
 }
 
-JUMP = {
+JUMP_SYMBOL_TO_INSTRUCTION = {
     "null": 0b000,
     "JGT": 0b001,
     "JEQ": 0b010,
@@ -73,18 +77,22 @@ class CPU:
     d_register: REGISTER16
     pc: PC
 
-    # outputs (initially None to allow for random initialization)
-    out_m: Optional[tuple[bool, ...]] = None
-    write_m: Optional[bool] = None
-    zr: Optional[bool] = None  # intermediate output of ALU
-    ng: Optional[bool] = None  # intermediate output of ALU
+    # intermediate outputs of ALU
+    _zr: bool
+    _ng: bool
+
+    # outputs
+    out_m: tuple[bool, ...]
+    write_m: bool
 
     def __post_init__(self) -> None:
-        if self.out_m is None:
-            object.__setattr__(self, "out_m", sample_bits(16))
-            object.__setattr__(self, "write_m", random.choice([True, False]))
-            object.__setattr__(self, "zr", self.out_m == ZERO16)
-            object.__setattr__(self, "ng", not is_non_negative(self.out_m))  # type: ignore
+        if self.out_m == ZERO16:
+            assert self._zr, "`zr` must be `True` if `out_m` is zero"
+            assert not self._ng, "`ng` must be `False` if `out_m` is zero"
+
+        if is_negative(self.out_m):
+            assert not self._zr, "`zr` must be `False` if `out_m` is negative"
+            assert self._ng, "`ng` must be `True` if `out_m` is negative"
 
     def __call__(
         self,
@@ -100,10 +108,10 @@ class CPU:
 
         assert isinstance(self.out_m, tuple), "out_m must be a tuple"
         assert is_n_bit_vector(self.out_m, n=16), "out_m must be a 16-bit tuple"
-        assert isinstance(self.zr, bool), "zr must be a bool"
-        assert isinstance(self.ng, bool), "ng must be a bool"
+        assert isinstance(self._zr, bool), "zr must be a bool"
+        assert isinstance(self._ng, bool), "ng must be a bool"
 
-        assert is_supported_instruction(
+        assert is_valid_instruction(
             instruction
         ), "instruction must be a valid instruction"
 
@@ -161,17 +169,17 @@ class CPU:
         should_jmp = AND(
             x=instruction[0],  # is C-instruction
             y=OR(
-                x=AND(is_jgt, AND(NOT(self.ng), NOT(self.zr))),
+                x=AND(is_jgt, AND(NOT(self._ng), NOT(self._zr))),
                 y=OR(
-                    x=AND(is_jeq, self.zr),
+                    x=AND(is_jeq, self._zr),
                     y=OR(
-                        x=AND(is_jge, NOT(self.ng)),
+                        x=AND(is_jge, NOT(self._ng)),
                         y=OR(
-                            x=AND(is_jlt, self.ng),
+                            x=AND(is_jlt, self._ng),
                             y=OR(
-                                x=AND(is_jne, NOT(self.zr)),
+                                x=AND(is_jne, NOT(self._zr)),
                                 y=OR(
-                                    x=AND(is_jle, OR(self.ng, self.zr)),
+                                    x=AND(is_jle, OR(self._ng, self._zr)),
                                     y=is_jmp,
                                 ),
                             ),
@@ -197,10 +205,10 @@ class CPU:
             a_register=new_a_register,
             d_register=new_d_register,
             pc=new_pc,
+            _zr=new_zr,
+            _ng=new_ng,
             out_m=new_out_m,
             write_m=new_write_m,
-            zr=new_zr,
-            ng=new_ng,
         )
 
         # post-conditions
@@ -218,18 +226,100 @@ class CPU:
 class Memory:
     """The main memory of the computer. Consists of RAM, a screen memory map and a register storing the output of the keyboard."""
 
-    pass
+    ram: RAM16K
+    screen: RAM8K
+    keyboard: REGISTER16
+    out: tuple[bool, ...]
+
+    def __call__(
+        self,
+        xs: tuple[bool, ...],
+        address: tuple[bool, ...],
+        load: bool,
+    ) -> "Memory":
+        # pre-conditions
+        assert is_n_bit_vector(xs, n=16), "xs must be a 16-bit tuple"
+        assert is_n_bit_vector(address, n=15), "address must be a 15-bit tuple"
+        assert isinstance(load, bool), "load must be a bool"
+        assert (
+            0 <= to_int(address) < 2**14 + 2**13
+        ), "address must be in [0, 2^14 + 2^13)"
+
+        # body
+        load_bits = DMUX(
+            x=load,
+            sel=address[0],
+        )
+
+        new_ram = self.ram(
+            xs=xs,
+            load=load_bits[0],
+            address=address[1:],
+        )
+
+        new_screen = self.screen(
+            xs=xs,
+            load=load_bits[1],
+            address=address[2:],
+        )
+
+        new_keyboard = self.keyboard
+        
+        new_out = MUX16(
+            xs=new_ram.out,
+            ys=MUX16(
+                xs=new_screen.out,
+                ys=new_keyboard.out,
+                sel=address[1],   
+            ),
+            sel=address[0],
+        )
+
+        new_memory = Memory(
+            ram=new_ram,
+            screen=new_screen,
+            keyboard=new_keyboard,
+            out=new_out,
+        )
+
+        # post-conditions
+        assert isinstance(new_memory, Memory), "output must be of type `Memory`"
+
+        return new_memory
 
 
 @dataclass(frozen=True)
 class Computer:
     """The Hack computer, including the CPU, ROM and RAM. When reset is zero, the program stored in the ROM is executed. When reset is one, the execution of the program restarts."""
 
-    pass
+    rom: ROM32K
+    cpu: CPU
+    memory: Memory
+
+    def __call__(self, reset: bool) -> "Computer":
+        new_cpu = self.cpu(
+            instruction=self.rom(self.cpu.pc.out),
+            in_m=self.memory.out,
+            reset=reset,
+        )
+
+        new_memory = self.memory(
+            xs=new_cpu.out_m,
+            address=new_cpu.address_m,
+            load=new_cpu.write_m,
+        )
+
+        new_computer = Computer(
+            rom=self.rom,
+            cpu=new_cpu,
+            memory=new_memory,
+        )
+
+        return new_computer
 
 
-def is_supported_instruction(instruction: tuple[bool, ...]) -> bool:
-    """Returns `True` iff `instruction` is a valid 16-bit instruction."""
+def is_valid_instruction(instruction: tuple[bool, ...]) -> bool:
+    """Returns `True` iff `instruction` is a valid 16-bit Hack machine language instruction."""
     if not is_n_bit_vector(instruction, n=16):
         return False
 
@@ -240,13 +330,13 @@ def is_supported_instruction(instruction: tuple[bool, ...]) -> bool:
     dest = instruction[10:13]
     jump = instruction[13:16]
 
-    if to_int(comp) not in COMP.values():
+    if to_int(comp) not in COMP_SYMBOL_TO_INSTRUCTION.values():
         return False
 
-    if to_int(dest) not in DEST.values():
+    if to_int(dest) not in DEST_SYMBOL_TO_INSTRUCTION.values():
         return False
 
-    if to_int(jump) not in JUMP.values():
+    if to_int(jump) not in JUMP_SYMBOL_TO_INSTRUCTION.values():
         return False
 
     return True
