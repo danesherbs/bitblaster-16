@@ -1,5 +1,20 @@
 import random
+
+from dataclasses import dataclass
 from typing import Any
+
+
+ZERO16 = (False,) * 16
+
+
+@dataclass(frozen=True)
+class SymbolicInstruction:
+    dest: str
+    comp: str
+    jump: str
+
+    def __repr__(self) -> str:
+        return f"{self.dest}={self.comp};{self.jump}"
 
 
 def sample_bits(n: int) -> tuple:
@@ -72,7 +87,7 @@ def int_to_bit_vector(i: int, n: int) -> tuple[bool, ...]:
 
     if n < i.bit_length():
         raise ValueError("input is too large to fit in `n` bits")
-    
+
     # body
     binary = bin(i)
     binary = binary[2:]  # remove the "0b" prefix
@@ -81,5 +96,33 @@ def int_to_bit_vector(i: int, n: int) -> tuple[bool, ...]:
 
     # post-conditions
     assert is_n_bit_vector(out, n), "output must be an `n`-bit tuple of bools"
+
+    return out
+
+
+def is_non_negative(xs: tuple[bool, ...]) -> bool:
+    """Returns `True` iff `xs` represents a non-negative integer."""
+    # pre-conditions
+    assert is_n_bit_vector(xs, n=16), "`xs` must be a 16-bit tuple of bools"
+
+    # body
+    out = not xs[0]
+
+    # post-conditions
+    assert isinstance(out, bool), "output must be a bool"
+
+    return out
+
+
+def is_positive(xs: tuple[bool, ...]) -> bool:
+    """Returns `True` iff `xs` represents a positive integer."""
+    # pre-conditions
+    assert is_n_bit_vector(xs, n=16), "`xs` must be a 16-bit tuple of bools"
+
+    # body
+    out = not xs[0] and any(xs[1:])
+
+    # post-conditions
+    assert isinstance(out, bool), "output must be a bool"
 
     return out
