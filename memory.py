@@ -103,6 +103,30 @@ class REGISTER16:
     def out(self) -> tuple[bool, ...]:
         return tuple(b.out for b in self.bits)
 
+    @staticmethod
+    def create() -> "REGISTER16":
+        """Creates a new 16-bit register with all bits set to 0."""
+        dffs = tuple(DFF(False) for _ in range(16))
+        bits = tuple(BIT(dff) for dff in dffs)
+        register = REGISTER16(bits)
+
+        # post-conditions
+        assert isinstance(register, REGISTER16), "`register` must be a `REGISTER16`"
+        assert all(
+            isinstance(b, BIT) for b in register.bits
+        ), "`register.bits` must be a 16-tuple of `BIT`s"
+        assert all(
+            isinstance(b.dff, DFF) for b in register.bits
+        ), "`register.bits` must be a 16-tuple of `BIT`s"
+        assert all(
+            isinstance(b.dff.out, bool) for b in register.bits
+        ), "`register.bits` must be a 16-tuple of `BIT`s"
+        assert all(
+            b.dff.out == False for b in register.bits
+        ), "`register.bits` must be a 16-tuple of `BIT`s"
+
+        return register
+
 
 @dataclass(frozen=True)
 class RAM8:
@@ -158,6 +182,22 @@ class RAM8:
     @property
     def state(self) -> tuple[tuple[bool, ...], ...]:
         return tuple(r.out for r in self.registers)
+
+    @staticmethod
+    def create() -> "RAM8":
+        """Creates a new 8-register memory with all bits set to 0."""
+        registers = tuple(REGISTER16.create() for _ in range(8))
+        out = ZERO16
+        ram8 = RAM8(registers, out)
+
+        # post-conditions
+        assert isinstance(ram8, RAM8), "`ram8` must be a `RAM8`"
+        assert all(
+            s == ZERO16 for s in ram8.state
+        ), "`ram8.state` must be a 8-tuple of 16-tuples of `bool`s"
+        assert ram8.out == ZERO16, "`ram8.out` must be a 16-tuple of `bool`s"
+
+        return ram8
 
 
 @dataclass(frozen=True)
@@ -226,6 +266,22 @@ class RAM64:
 
         return output
 
+    @staticmethod
+    def create() -> "RAM64":
+        """Creates a new 64-register memory with all bits set to 0."""
+        ram8s = tuple(RAM8.create() for _ in range(8))
+        out = ZERO16
+        ram64 = RAM64(ram8s, out)
+
+        # post-conditions
+        assert isinstance(ram64, RAM64), "`ram64` must be a `RAM64`"
+        assert all(
+            s == ZERO16 for s in ram64.state
+        ), "`ram64.state` must be a 64-tuple of 16-tuples of `bool`s"
+        assert ram64.out == ZERO16, "`ram64.out` must be a 16-tuple of `bool`s"
+
+        return ram64
+
 
 @dataclass(frozen=True)
 class RAM512:
@@ -265,7 +321,7 @@ class RAM512:
         assert all(
             isinstance(r, RAM64) for r in new_ram512.ram64s
         ), "`new_ram512.ram64s` must be an 8-tuple of `RAM64`s"
-        
+
         address_idx = to_int(address)
 
         if load:
@@ -292,6 +348,22 @@ class RAM512:
             output += ram64.state
 
         return output
+
+    @staticmethod
+    def create() -> "RAM512":
+        """Creates a new 512-register memory with all bits set to 0."""
+        ram64s = tuple(RAM64.create() for _ in range(8))
+        out = ZERO16
+        ram512 = RAM512(ram64s, out)
+
+        # post-conditions
+        assert isinstance(ram512, RAM512), "`ram512` must be a `RAM512`"
+        assert all(
+            s == ZERO16 for s in ram512.state
+        ), "`ram512.state` must be a 512-tuple of 16-tuples of `bool`s"
+        assert ram512.out == ZERO16, "`ram512.out` must be a 16-tuple of `bool`s"
+
+        return ram512
 
 
 @dataclass(frozen=True)
@@ -332,7 +404,7 @@ class RAM4K:
         assert all(
             isinstance(r, RAM512) for r in new_ram4k.ram512s
         ), "`new_ram4k.ram512s` must be an 8-tuple of `RAM512`s"
-        
+
         address_idx = to_int(address)
 
         if load:
@@ -359,6 +431,22 @@ class RAM4K:
             output += ram512.state
 
         return output
+
+    @staticmethod
+    def create() -> "RAM4K":
+        """Creates a new 4,096-register memory with all bits set to 0."""
+        ram512s = tuple(RAM512.create() for _ in range(8))
+        out = ZERO16
+        ram4k = RAM4K(ram512s, out)
+
+        # post-conditions
+        assert isinstance(ram4k, RAM4K), "`ram4k` must be a `RAM4K`"
+        assert all(
+            s == ZERO16 for s in ram4k.state
+        ), "`ram4k.state` must be a 4,096-tuple of 16-tuples of `bool`s"
+        assert ram4k.out == ZERO16, "`ram4k.out` must be a 16-tuple of `bool`s"
+
+        return ram4k
 
 
 @dataclass(frozen=True)
@@ -430,6 +518,22 @@ class RAM8K:
             output += ram4k.state
 
         return output
+    
+    @staticmethod
+    def create() -> "RAM8K":
+        """Creates a new 8,192-register memory with all bits set to 0."""
+        ram4ks = tuple(RAM4K.create() for _ in range(2))
+        out = ZERO16
+        ram8k = RAM8K(ram4ks, out)
+
+        # post-conditions
+        assert isinstance(ram8k, RAM8K), "`ram8k` must be a `RAM8K`"
+        assert all(
+            s == ZERO16 for s in ram8k.state
+        ), "`ram8k.state` must be a 8,192-tuple of 16-tuples of `bool`s"
+        assert ram8k.out == ZERO16, "`ram8k.out` must be a 16-tuple of `bool`s"
+
+        return ram8k
 
 
 @dataclass(frozen=True)
@@ -465,7 +569,7 @@ class RAM16K:
         new_out = MUX4WAY16(  # type: ignore
             *[r.out for r in new_ram4ks],
             sel=address[:2],
-        ) 
+        )
         new_ram16k = RAM16K(new_ram4ks, new_out)
 
         # post-conditions
@@ -473,7 +577,7 @@ class RAM16K:
         assert all(
             isinstance(r, RAM4K) for r in new_ram16k.ram4ks
         ), "`new_ram16k.ram4ks` must be an 4-tuple of `RAM4K`s"
-        
+
         address_idx = to_int(address)
 
         if load:
@@ -500,6 +604,21 @@ class RAM16K:
             output += ram4k.state
 
         return output
+
+    @staticmethod
+    def create() -> "RAM16K":
+        """Creates a new 16,384-register memory with all bits set to 0."""
+        ram4ks = tuple(RAM4K.create() for _ in range(4))
+        ram16k = RAM16K(ram4ks, ZERO16)
+
+        # post-conditions
+        assert isinstance(ram16k, RAM16K), "`ram16k` must be a `RAM16K`"
+        assert all(
+            s == ZERO16 for s in ram16k.state
+        ), "`ram16k.state` must be a 16,384-tuple of 16-tuples of `bool`s"
+        assert ram16k.out == ZERO16, "`ram16k.out` must be `ZERO16`"
+
+        return ram16k
 
 
 @dataclass(frozen=True)
@@ -554,6 +673,17 @@ class PC:
     def out(self) -> tuple[bool, ...]:
         return self.register.out
 
+    @staticmethod
+    def create() -> "PC":
+        """Creates a new 16-bit program counter with all bits set to 0."""
+        pc = PC(REGISTER16.create())
+
+        # post-conditions
+        assert isinstance(pc, PC), "`pc` must be a `PC`"
+        assert pc.out == ZERO16, "`pc.out` must be `ZERO16`"
+
+        return pc
+
 
 @dataclass(frozen=True)
 class ROM32K:
@@ -566,7 +696,37 @@ class ROM32K:
             is_n_bit_vector(xs, n=16) for xs in self.registers
         ), "`registers` must be a tuple of 16-tuples of `bool`s"
         assert len(self.registers) == 2**15, "`registers` must be a 32,768-tuple"
-
+    
     def __call__(self, address: tuple[bool, ...]) -> tuple[bool, ...]:
+        # pre-conditions
+        assert is_n_bit_vector(address, n=15), "`address` must be a 15-tuple of `bool`s"
+        
+        # body
         register_idx = to_int(address)
-        return self.registers[register_idx]
+        out = self.registers[register_idx]
+        
+        # post-conditions
+        assert is_n_bit_vector(out, n=16), "`out` must be a 16-tuple of `bool`s"
+        
+        return out
+
+    @staticmethod
+    def create(instructions: tuple[tuple[bool, ...], ...] = tuple()) -> "ROM32K":
+        """Creates a `ROM32K` from a tuple of 16-bit instructions. Pads with 0's to reach 32,768 instructions if necessary."""
+        # pre-conditions
+        assert all(
+            is_n_bit_vector(xs, n=16) for xs in instructions
+        ), "`instructions` must be a tuple of 16-tuples of `bool`s"
+        assert (
+            len(instructions) <= 2**15
+        ), "`instructions` must be at most a 32,768-tuple"
+
+        # body
+        padding = ((False,) * 16,) * (2**15 - len(instructions))
+        padded_instructions = instructions + padding
+        rom32k = ROM32K(padded_instructions)
+
+        # post-conditions
+        assert isinstance(rom32k, ROM32K), "`rom32k` must be a `ROM32K`"
+
+        return rom32k

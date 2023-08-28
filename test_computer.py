@@ -11,6 +11,7 @@ from utils import (
     is_n_bit_vector,
     is_non_negative,
     is_positive,
+    make_one_hot,
     SymbolicInstruction,
 )
 from arithmetic import INC16
@@ -25,7 +26,6 @@ from memory import (
     RAM8K,
     RAM16K,
     PC,
-    ROM32K,
 )
 from computer import (
     DEST_SYMBOL_TO_INSTRUCTION,
@@ -38,7 +38,7 @@ from computer import (
 )
 
 
-NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST = 1
+NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST = 8
 
 
 def _build_a_instruction(value: int) -> int:
@@ -146,12 +146,6 @@ def _create_random_pc() -> PC:
     return PC(register)
 
 
-def _create_zeroed_pc() -> PC:
-    bits = tuple(BIT(DFF(False)) for _ in range(16))
-    register = REGISTER16(bits)
-    return PC(register)
-
-
 def _create_random_memory() -> Memory:
     """Returns a random memory."""
     ram16k = _create_random_ram16k()
@@ -176,7 +170,7 @@ def _create_random_invalid_memory_address() -> tuple[bool, ...]:
 def _create_random_cpu() -> CPU:
     a_register = _create_random_register()
     d_register = _create_random_register()
-    pc = _create_zeroed_pc()
+    pc = _create_random_pc()
 
     out_m = ZERO16
     write_m = False
@@ -192,20 +186,6 @@ def _create_random_cpu() -> CPU:
         out_m=out_m,
         write_m=write_m,
     )
-
-
-def _create_random_rom32k() -> ROM32K:
-    """Returns a random ROM32K."""
-    ram16ks = tuple(_create_random_ram16k() for _ in range(2))
-    state = ram16ks[0].state + ram16ks[1].state
-    return ROM32K(state)
-
-
-def _create_random_computer() -> Computer:
-    rom = _create_random_rom32k()
-    cpu = _create_random_cpu()
-    memory = _create_random_memory()
-    return Computer(rom, cpu, memory)
 
 
 def _to_symbol(c_instruction: tuple[bool, ...]) -> SymbolicInstruction:
@@ -294,8 +274,8 @@ def test_cpu_runs_a_instructions(
         new_cpu.d_register.out == cpu.d_register.out
     ), "D register must not change when executing an A-instruction"
 
-    assert new_cpu.pc.out == INC16(
-        cpu.pc.out
+    assert (
+        to_int(new_cpu.pc_out) == (to_int(cpu.pc_out) + 1) % 2**15
     ), "PC must increment by 1 when executing an A-instruction"
 
     assert (
@@ -336,7 +316,7 @@ def test_cpu_runs_c_instructions(
 
     # Then (dest)
     if "A" in symbolic_instruction.dest:
-        assert new_cpu.a_register.out == cpu.out_m, "`A` must be written to `out_m`"
+        assert new_cpu.a_register.out == new_cpu.out_m, "`A` must be written to `out_m`"
 
     if "A" not in symbolic_instruction.dest:
         assert new_cpu.a_register.out == cpu.a_register.out, "`A` must not be changed"
@@ -350,7 +330,7 @@ def test_cpu_runs_c_instructions(
         ), "`new_write_m` must be `False` when M not in destination"
 
     if "D" in symbolic_instruction.dest:
-        assert new_cpu.d_register.out == cpu.out_m, "`D` must be written to `out_m`"
+        assert new_cpu.d_register.out == new_cpu.out_m, "`D` must be written to `out_m`"
 
     if "D" not in symbolic_instruction.dest:
         assert new_cpu.d_register.out == cpu.d_register.out, "`D` must not be changed"
@@ -492,79 +472,79 @@ def test_cpu_runs_c_instructions(
 
     # Then (jump)
     if symbolic_instruction.jump == "null":
-        assert new_cpu.pc.out == INC16(
-            cpu.pc.out
+        assert (
+            to_int(new_cpu.pc_out) == (to_int(cpu.pc_out) + 1) % 2**15
         ), "PC must increment by 1 when jump is `null`"
 
     if symbolic_instruction.jump == "JGT":
         if is_positive(cpu.out_m):
             assert (
-                new_cpu.pc.out == cpu.a_register.out
+                new_cpu.pc_out == cpu.a_register.out[1:]
             ), "PC must jump to `A` when jump is `JGT` and ALU output is positive"
 
         if not is_positive(cpu.out_m):
-            assert new_cpu.pc.out == INC16(
-                cpu.pc.out
-            ), "PC must increment by 1 when jump is `JGT` and ALU output is negative"
+            assert (
+                to_int(new_cpu.pc_out) == (to_int(cpu.pc_out) + 1) % 2**15
+            ), "PC must increment by 1 when jump is `JGT` and ALU output non-positive"
 
     if symbolic_instruction.jump == "JEQ":
         if cpu.out_m == ZERO16:
             assert (
-                new_cpu.pc.out == cpu.a_register.out
+                new_cpu.pc_out == cpu.a_register.out[1:]
             ), "PC must jump to `A` when jump is `JEQ` and ALU output is zero"
 
         if cpu.out_m != ZERO16:
-            assert new_cpu.pc.out == INC16(
-                cpu.pc.out
+            assert (
+                to_int(new_cpu.pc_out) == (to_int(cpu.pc_out) + 1) % 2**15
             ), "PC must increment by 1 when jump is `JEQ` and ALU output is non-zero"
 
     if symbolic_instruction.jump == "JGE":
         if is_non_negative(cpu.out_m):
             assert (
-                new_cpu.pc.out == cpu.a_register.out
+                new_cpu.pc_out == cpu.a_register.out[1:]
             ), "PC must jump to `A` when jump is `JGE` and ALU output is non-negative"
 
         if not is_non_negative(cpu.out_m):
-            assert new_cpu.pc.out == INC16(
-                cpu.pc.out
+            assert (
+                to_int(new_cpu.pc_out) == (to_int(cpu.pc_out) + 1) % 2**15
             ), "PC must increment by 1 when jump is `JGE` and ALU output is negative"
 
     if symbolic_instruction.jump == "JLT":
         if not is_non_negative(cpu.out_m):
             assert (
-                new_cpu.pc.out == cpu.a_register.out
+                new_cpu.pc_out == cpu.a_register.out[1:]
             ), "PC must jump to `A` when jump is `JLT` and ALU output is negative"
 
         if is_non_negative(cpu.out_m):
-            assert new_cpu.pc.out == INC16(
-                cpu.pc.out
+            assert (
+                to_int(new_cpu.pc_out) == (to_int(cpu.pc_out) + 1) % 2**15
             ), "PC must increment by 1 when jump is `JLT` and ALU output is non-negative"
 
     if symbolic_instruction.jump == "JNE":
         if cpu.out_m != ZERO16:
             assert (
-                new_cpu.pc.out == cpu.a_register.out
+                new_cpu.pc_out == cpu.a_register.out[1:]
             ), "PC must jump to `A` when jump is `JNE` and ALU output is non-zero"
 
         if cpu.out_m == ZERO16:
-            assert new_cpu.pc.out == INC16(
-                cpu.pc.out
+            assert (
+                to_int(new_cpu.pc_out) == (to_int(cpu.pc_out) + 1) % 2**15
             ), "PC must increment by 1 when jump is `JNE` and ALU output is zero"
 
     if symbolic_instruction.jump == "JLE":
         if not is_positive(cpu.out_m):
             assert (
-                new_cpu.pc.out == cpu.a_register.out
-            ), "PC must jump to `A` when jump is `JLE` and ALU output is negative"
+                new_cpu.pc_out == cpu.a_register.out[1:]
+            ), "PC must jump to `A` when jump is `JLE` and ALU output is non-positive"
 
         if is_positive(cpu.out_m):
-            assert new_cpu.pc.out == INC16(
-                cpu.pc.out
+            assert (
+                to_int(new_cpu.pc_out) == (to_int(cpu.pc_out) + 1) % 2**15
             ), "PC must increment by 1 when jump is `JLE` and ALU output is positive"
 
     if symbolic_instruction.jump == "JMP":
         assert (
-            new_cpu.pc.out == cpu.a_register.out
+            new_cpu.pc_out == cpu.a_register.out[1:]
         ), "PC must jump to `A` when jump is an unconditional `JMP`"
 
 
@@ -609,12 +589,15 @@ def test_program_counter_is_reset_when_reset_control_bit_is_asserted(
     in_m: tuple[bool, ...],
     reset: bool,
 ) -> None:
+    # Given
+    ZERO15 = (False,) * 15
+
     # When
     new_cpu = cpu(instruction, in_m, reset)
 
     # Then
     assert (
-        new_cpu.pc.out == ZERO16
+        new_cpu.pc_out == ZERO15
     ), "PC must be reset to `0` when reset control bit is asserted"
 
 
@@ -732,3 +715,218 @@ def test_memory_does_not_load_value_at_valid_address_but_outputs_it_next_time_st
 
     if address_idx == 2**14 + 2**13:
         assert new_memory.out == memory.keyboard.out, "out must be the value at address"
+
+
+def test_computer_can_store_value_in_ram() -> None:
+    # Given
+    instructions_int = (
+        # set RAM[3] = 1
+        0b0000000000000011,  # @3
+        0b1110111111001000,  # M=1
+    )
+
+    instructions = tuple(int_to_bit_vector(i, n=16) for i in instructions_int)
+    computer = Computer.create(instructions)
+
+    # When
+    new_computer = computer(reset=True)
+
+    for _ in range(len(instructions)):
+        new_computer = new_computer(reset=False)
+
+    # one more step so Memory can act on CPU's outputs
+    # new_computer = new_computer(reset=False)
+
+    # Then
+    assert all(
+        s == ZERO16 for s in computer.memory.ram.state
+    ), "all RAM addresses must initially be `0`"
+    assert all(
+        s == ZERO16 for s in new_computer.memory.ram.state[:3]
+    ), "all other RAM addresses before must be `0`"
+    assert new_computer.memory.ram.state[3] == make_one_hot(n=16, i=15)
+    assert new_computer.memory.out == make_one_hot(n=16, i=15)
+    assert all(
+        s == ZERO16 for s in new_computer.memory.ram.state[4:]
+    ), "all other RAM addresses after must be `0`"
+
+
+def test_computer_can_store_ram_value_in_d_register() -> None:
+    # Given
+    instructions_int = (
+        # set RAM[3] = 1
+        0b0000000000000011,  # @3
+        0b1110111111001000,  # M=1
+        # set D = RAM[3]
+        0b1111110000010000,  # D=M
+    )
+
+    instructions = tuple(int_to_bit_vector(i, n=16) for i in instructions_int)
+    computer = Computer.create(instructions)
+
+    # When
+    new_computer = computer(reset=True)
+
+    for _ in range(len(instructions)):
+        new_computer = new_computer(reset=False)
+
+    new_computer = new_computer(reset=False)
+
+    # Then
+    for state in computer.memory.ram.state:
+        assert state == ZERO16, "all RAM addresses must initially be `0`"
+
+    for i, state in enumerate(new_computer.memory.ram.state):
+        if i == 3:
+            assert state == make_one_hot(n=16, i=15)
+
+        if i != 3:
+            assert state == ZERO16, "all other RAM addresses must be `0`"
+
+    assert new_computer.cpu.d_register.out == make_one_hot(n=16, i=15)
+
+
+def test_computer_can_add_value_in_ram_to_d_register() -> None:
+    # Given
+    instructions_int = (
+        # set RAM[0] = 1
+        0b0000000000000000,  # @0
+        0b1110111111001000,  # M=1
+        # set RAM[1] = 1
+        0b0000000000000001,  # @1
+        0b1110111111001000,  # M=1
+        # set D = RAM[0]
+        0b0000000000000000,  # @0
+        0b1111110000010000,  # D=M
+        # set D = D + RAM[1]
+        0b0000000000000001,  # @1
+        0b1111000010010000,  # D=D+M
+    )
+
+    instructions = tuple(int_to_bit_vector(i, n=16) for i in instructions_int)
+    computer = Computer.create(instructions)
+
+    # When
+    new_computers: list[Computer] = [None for _ in range(len(instructions) + 2)]  # type: ignore
+
+    new_computers[0] = computer(reset=True)
+
+    for t in range(1, len(instructions) + 1):
+        new_computers[t] = new_computers[t - 1](reset=False)
+
+    # Then
+    assert all(
+        s == ZERO16 for s in computer.memory.ram.state
+    ), "all RAM addresses must initially be `0`"
+
+    # Then (at line 1)
+    assert new_computers[1].cpu.a_register.out == ZERO16
+
+    # Then (at line 2)
+    assert new_computers[2].cpu.a_register.out == ZERO16
+    assert new_computers[2].cpu.out_m == make_one_hot(n=16, i=15)
+    assert new_computers[2].cpu.write_m
+    assert new_computers[2].memory.out == make_one_hot(n=16, i=15)
+
+    # Then (at line 3)
+    assert new_computers[3].cpu.a_register.out == make_one_hot(n=16, i=15)
+
+    # Then (at line 4)
+    assert new_computers[4].cpu.a_register.out == make_one_hot(n=16, i=15)
+    assert new_computers[4].cpu.out_m == make_one_hot(n=16, i=15)
+    assert new_computers[4].cpu.write_m
+    assert new_computers[4].memory.out == make_one_hot(n=16, i=15)
+
+    # Then (at line 5)
+    assert new_computers[5].cpu.a_register.out == ZERO16
+    assert new_computers[5].memory.out == make_one_hot(n=16, i=15)
+
+    # Then (at line 6)
+    assert new_computers[6].cpu.a_register.out == ZERO16
+    assert new_computers[6].memory.out == make_one_hot(n=16, i=15)
+    assert new_computers[6].cpu.d_register.out == make_one_hot(n=16, i=15)
+
+    # Then (at line 7)
+    assert new_computers[7].cpu.a_register.out == make_one_hot(n=16, i=15)
+    assert new_computers[7].memory.out == make_one_hot(n=16, i=15)
+
+    # Then (at line 8)
+    assert new_computers[8].cpu.a_register.out == make_one_hot(n=16, i=15)
+    assert new_computers[8].memory.out == make_one_hot(n=16, i=15)
+    assert new_computers[8].cpu.d_register.out == make_one_hot(n=16, i=14)
+    assert all(
+        s == ZERO16 for s in new_computers[8].memory.ram.state[2:]
+    ), "all other RAM addresses must be `0`"
+
+
+def test_computer_can_add_two_numbers() -> None:
+    # Given
+    instructions_int = (
+        # set RAM[0] = 1
+        0b0000000000000000,  # @0
+        0b1110111111001000,  # M=1
+        # set RAM[1] = 1
+        0b0000000000000001,  # @1
+        0b1110111111001000,  # M=1
+        # set D = RAM[0]
+        0b0000000000000000,  # @0
+        0b1111110000010000,  # D=M
+        # set D = D + RAM[1]
+        0b0000000000000001,  # @1
+        0b1111000010010000,  # D=D+M
+        # set RAM[2] = D
+        0b0000000000000010,  # @2
+        0b1110001100001000,  # M=D
+    )
+
+    instructions = tuple(int_to_bit_vector(i, n=16) for i in instructions_int)
+    computer = Computer.create(instructions)
+
+    # When
+    new_computer = computer(reset=True)
+
+    for _ in range(len(instructions)):
+        new_computer = new_computer(reset=False)
+
+    new_computer = new_computer(reset=False)
+
+    # Then
+    assert all(
+        s == ZERO16 for s in computer.memory.ram.state
+    ), "all RAM addresses must initially be `0`"
+    assert new_computer.memory.ram.state[0] == make_one_hot(n=16, i=15)
+    assert new_computer.memory.ram.state[1] == make_one_hot(n=16, i=15)
+    assert new_computer.memory.ram.state[2] == make_one_hot(n=16, i=14)
+    assert new_computer.cpu.d_register.out == make_one_hot(n=16, i=14)
+    assert all(
+        s == ZERO16 for s in new_computer.memory.ram.state[3:]
+    ), "all other RAM addresses must be `0`"
+
+
+@pytest.mark.skip(reason="Takes a long time and not sure if test is correct yet")
+def test_computer_can_draw_a_rectangle_to_the_screen() -> None:
+    # Given
+    lines = []
+
+    with open("programs/rectangle.hack", "r") as f:
+        for line in f:
+            instruction = tuple(bool(int(b)) for b in line.strip())
+            lines.append(instruction)
+
+    instructions = tuple(lines)
+    computer = Computer.create(instructions)
+
+    # When
+    new_computer = computer(reset=True)
+
+    for _ in range(len(lines)):
+        new_computer = computer(reset=False)
+
+    # Then
+    for i, row in enumerate(new_computer.memory.screen.state):
+        if i == 2:
+            assert row[:16] == (True,) * 16, "first 16 pixels of row must be all white"
+            assert row[16:] == (False,) * (512 - 16), "rest of pixels must be all black"
+
+        if i != 2:
+            assert row == (False,) * 512, "all other rows must be all black"
