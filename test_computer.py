@@ -271,6 +271,10 @@ def test_cpu_runs_a_instructions(
     ), "A register must store the value of the A-instruction"
 
     assert (
+        new_cpu.address_m == a_instruction[1:]
+    ), "`address_m` in next time step must be the value of the A-instruction in the current time step"
+
+    assert (
         new_cpu.d_register.out == cpu.d_register.out
     ), "D register must not change when executing an A-instruction"
 
@@ -694,9 +698,11 @@ def test_memory_does_not_load_value_at_valid_address_but_outputs_it_next_time_st
     assert (
         new_memory.ram.state == memory.ram.state
     ), "RAM must not change when load is `False`"
+
     assert (
         new_memory.screen.state == memory.screen.state
     ), "screen must not change when load is `False`"
+
     assert (
         new_memory.keyboard.out == memory.keyboard.out
     ), "keyboard must not change when load is `False`"
@@ -733,9 +739,6 @@ def test_computer_can_store_value_in_ram() -> None:
 
     for _ in range(len(instructions)):
         new_computer = new_computer(reset=False)
-
-    # one more step so Memory can act on CPU's outputs
-    # new_computer = new_computer(reset=False)
 
     # Then
     assert all(
@@ -888,8 +891,6 @@ def test_computer_can_add_two_numbers() -> None:
     for _ in range(len(instructions)):
         new_computer = new_computer(reset=False)
 
-    new_computer = new_computer(reset=False)
-
     # Then
     assert all(
         s == ZERO16 for s in computer.memory.ram.state
@@ -903,30 +904,36 @@ def test_computer_can_add_two_numbers() -> None:
     ), "all other RAM addresses must be `0`"
 
 
-@pytest.mark.skip(reason="Takes a long time and not sure if test is correct yet")
-def test_computer_can_draw_a_rectangle_to_the_screen() -> None:
+def test_computer_can_draw_a_single_pixel_on_the_screen() -> None:
     # Given
-    lines = []
+    instructions_int = (
+        # set MEMORY[2^14] = SCREEN[0] = 1
+        0b0100000000000000,  # @2^14
+        0b1110111111001000,  # M=1
+    )
 
-    with open("programs/rectangle.hack", "r") as f:
-        for line in f:
-            instruction = tuple(bool(int(b)) for b in line.strip())
-            lines.append(instruction)
-
-    instructions = tuple(lines)
+    instructions = tuple(int_to_bit_vector(i, n=16) for i in instructions_int)
     computer = Computer.create(instructions)
 
     # When
-    new_computer = computer(reset=True)
+    new_computers: list[Computer] = [None for _ in range(len(instructions) + 2)]  # type: ignore
 
-    for _ in range(len(lines)):
-        new_computer = computer(reset=False)
+    new_computers[0] = computer(reset=True)
 
-    # Then
-    for i, row in enumerate(new_computer.memory.screen.state):
-        if i == 2:
-            assert row[:16] == (True,) * 16, "first 16 pixels of row must be all white"
-            assert row[16:] == (False,) * (512 - 16), "rest of pixels must be all black"
+    for t in range(1, len(instructions) + 1):
+        new_computers[t] = new_computers[t - 1](reset=False)
 
-        if i != 2:
-            assert row == (False,) * 512, "all other rows must be all black"
+    # Then (after line 1)
+    assert new_computers[1].cpu.address_m == make_one_hot(n=15, i=0)
+
+    # Then (after line 2)
+    assert new_computers[2].cpu.address_m == make_one_hot(n=15, i=0)
+    assert new_computers[2].cpu.write_m
+    assert new_computers[2].cpu.out_m == make_one_hot(n=16, i=15)
+    assert new_computers[2].memory.ram.state == new_computers[0].memory.ram.state
+    assert new_computers[2].memory.screen.state[0] == make_one_hot(n=16, i=15)
+    assert new_computers[2].memory.out == make_one_hot(n=16, i=15)
+    assert (
+        new_computers[2].memory.screen.state[1:]
+        == new_computers[0].memory.screen.state[1:]
+    ), "all other screen pixels must be `0`"

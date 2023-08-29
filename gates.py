@@ -154,7 +154,7 @@ def OR16(xs: tuple[bool, ...], ys: tuple[bool, ...]) -> tuple[bool, ...]:
 
     # body
     out = tuple(x or y for x, y in zip(xs, ys))
-    
+
     # post-conditions
     assert is_n_bit_vector(out, n=16), "Output must be 16-tuple of `bool`s"
 

@@ -6,7 +6,7 @@ from arithmetic import INC16
 from memory import DFF, BIT, REGISTER16, RAM8, RAM64, RAM512, RAM4K, RAM8K, RAM16K, PC
 
 
-NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST = 8
+NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST = 16
 ZERO16 = (False,) * 16
 
 
@@ -171,9 +171,7 @@ def test_ram8(
             b.out == v for b, v in zip(new_ram8.registers[address_idx].bits, xs)
         ), "new value must be stored when load=1"
 
-        assert (
-            new_ram8.out == xs
-        ), "`out` must be the value of the RAM at `address`"
+        assert new_ram8.out == xs, "`out` must be the value of the RAM at `address`"
 
     if not load:
         assert all(
@@ -226,12 +224,16 @@ def test_ram64(
     address_idx = utils.to_int(address)
 
     if load:
-        assert new_ram64.state[address_idx] == xs, "new value must be stored when load=1"
+        assert (
+            new_ram64.state[address_idx] == xs
+        ), "new value must be stored when load=1"
         assert new_ram64.out == xs, "out must return the new value when load=1"
-    
+
     if not load:
         assert new_ram64.state == ram64.state, "old value must be kept when load=0"
-        assert new_ram64.out == ram64.state[address_idx], "out must be the value of the RAM at `address`"
+        assert (
+            new_ram64.out == ram64.state[address_idx]
+        ), "out must be the value of the RAM at `address`"
 
     for i in range(64):
         if i == address_idx:
@@ -274,12 +276,14 @@ def test_ram512(
 
     if not load:
         assert old_state == new_state, "old value must be kept when load=0"
-        assert new_ram512.out == old_state[address_idx], "out must be the value of the RAM at `address`"
+        assert (
+            new_ram512.out == old_state[address_idx]
+        ), "out must be the value of the RAM at `address`"
 
     for i in range(512):
         if i == address_idx:
             continue  # skip the address index
-            
+
         assert new_state[i] == old_state[i], f"register at index {i} should not change"
 
 
@@ -315,7 +319,9 @@ def test_ram4k(
 
     if not load:
         assert old_state == new_state, "old value must be kept when load=0"
-        assert new_ram4k.out == old_state[address_idx], "out must be the value of the RAM at `address`"
+        assert (
+            new_ram4k.out == old_state[address_idx]
+        ), "out must be the value of the RAM at `address`"
 
     for i in range(4_096):
         if i == address_idx:
@@ -356,7 +362,9 @@ def test_ram8k(
 
     if not load:
         assert old_out == new_out, "old value must be kept when load=0"
-        assert new_ram8k.out == old_out[address_idx], "out must be the value of the RAM at `address`"
+        assert (
+            new_ram8k.out == old_out[address_idx]
+        ), "out must be the value of the RAM at `address`"
 
     for i in range(2**13):
         if i == address_idx:
@@ -395,8 +403,10 @@ def test_ram16k(
 
     if not load:
         assert old_out == new_out, "old value must be kept when load=0"
-        assert new_ram16k.out == old_out[address_idx], "out must be the value of the RAM at `address`"
-    
+        assert (
+            new_ram16k.out == old_out[address_idx]
+        ), "out must be the value of the RAM at `address`"
+
     for i in range(2**14):
         if i == address_idx:
             continue  # skip the address index

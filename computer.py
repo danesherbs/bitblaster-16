@@ -1,5 +1,3 @@
-import tkinter as tk
-
 from dataclasses import dataclass
 from gates import AND, OR, NOT, MUX16, DMUX
 from arithmetic import ALU
@@ -276,7 +274,7 @@ class Memory:
         # body
         load_bits = DMUX(
             x=load,
-            sel=address[0],
+            sel=address[0],  # 15th bit is 1 means address >= 2^14
         )
 
         new_ram = self.ram(
@@ -288,7 +286,7 @@ class Memory:
         new_screen = self.screen(
             xs=xs,
             load=load_bits[1],
-            address=address[2:],
+            address=address[2:],  # last 13 bits goes to screen
         )
 
         new_keyboard = self.keyboard
@@ -298,7 +296,10 @@ class Memory:
             ys=MUX16(
                 xs=new_screen.out,
                 ys=new_keyboard.out,
-                sel=address[1],
+                sel=AND(
+                    address[0],
+                    address[1],
+                ),
             ),
             sel=address[0],
         )
@@ -406,23 +407,29 @@ def is_valid_instruction(instruction: tuple[bool, ...]) -> bool:
     return True
 
 
-def render_screen(root: tk.Tk, canvas: tk.Canvas, screen: "RAM8K") -> None:
-    canvas.delete("all")
+def render_screen(screen: tuple[tuple[bool, ...], ...]) -> None:
+    import matplotlib.pyplot as plt  # type: ignore
+    import numpy as np
 
-    row: int = 0
-    col: int = 0
+    # pre-conditions
+    assert len(screen) == 2**13, "screen must be 2^13 16-bit numbers"
+    assert all(is_n_bit_vector(v, n=16) for v in screen), "screen must be 16-bit tuples"
 
-    for register in screen.state:
+    # body
+    img_array = np.zeros((256, 512), dtype=np.uint8)
+    row, col = 0, 0
+
+    for register in screen:
         for bit in register:
-            color = "white" if bit else "black"
-            canvas.create_rectangle(
-                col, row, col + 1, row + 1, fill=color, outline=color
-            )
+            color = 255 if bit else 0
+            img_array[row, col] = color
 
             col += 1
             if col >= 512:
                 col = 0
                 row += 1
 
-    root.update_idletasks()
-    root.update()
+    plt.title("🔥 BitBlaster 16 🔥")
+    plt.imshow(img_array, cmap="gray")
+    plt.axis("off")
+    plt.show()

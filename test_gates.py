@@ -20,7 +20,7 @@ from gates import (
 from utils import make_one_hot, sample_bits
 
 
-NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST = 1_000
+NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST = 1_024
 
 
 # elementary logic gates

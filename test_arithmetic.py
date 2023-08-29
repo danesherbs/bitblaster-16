@@ -2,7 +2,7 @@ import arithmetic
 import gates
 import utils
 
-NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST = 1_000
+NUMBER_OF_SAMPLES_TO_DRAW_PER_TEST = 1_024
 
 
 def test_halfadder():
@@ -234,7 +234,7 @@ def test_alu_f_of_x_and_y_equals_y_minus_one():
         out, zr, ng = arithmetic.ALU(
             xs, ys, zx=True, nx=True, zy=False, ny=False, f=True, no=False
         )
-        
+
         assert out == arithmetic.ADD16(ys, minus_one)
         assert zr == all(o == False for o in out)
         assert ng == (out[0] == True)
@@ -309,7 +309,7 @@ def test_alu_f_of_x_and_y_equals_x_or_y():
         out, zr, ng = arithmetic.ALU(
             xs, ys, zx=False, nx=True, zy=False, ny=True, f=False, no=True
         )
-        
+
         assert out == gates.OR16(xs, ys)
         assert zr == all(o == False for o in out)
         assert ng == (out[0] == True)

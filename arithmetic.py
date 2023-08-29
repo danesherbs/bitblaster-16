@@ -87,7 +87,7 @@ def NEG16(xs: tuple[bool, ...]) -> tuple[bool, ...]:
 
     # body
     out = INC16(NOT16(xs))
-    
+
     # post-conditions
     assert is_n_bit_vector(out, n=16), "`out` must be a 16-tuple of `bool`s"
 
